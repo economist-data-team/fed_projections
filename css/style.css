@@ -1,15 +1,30 @@
 body {
   font: 14px Officina, Calibri, Arial, sans-serif, Lucida Grande, Arial Unicode MS; }
 
-.header-text {
-  font-family: Officina, Calibri, Arial, sans-serif, Lucida Grande, Arial Unicode MS; }
+.title {
+  font-family: Officina_bold, Calibri, Arial, sans-serif, Lucida Grande, Arial Unicode MS; }
+
+.subtitle {
+  font-size: 14px; }
 
 .header-title {
-  font-family: Officina_bold, Calibri, Arial, sans-serif, Lucida Grande, Arial Unicode MS;
   font-size: 17px; }
 
-.header-subtitle {
-  font-size: 12px; }
+.endmatter {
+  margin: 10px 20px;
+  max-width: 555px;
+  font-size: 13px; }
+
+.note {
+  margin-left: 1.5em;
+  float: right;
+  text-align: right; }
+
+.toggle-title {
+  margin-right: 0.33em; }
+
+.axis-label {
+  font-style: italic; }
 
 #interactive {
   width: 595px; }
@@ -18,27 +33,41 @@ body {
   fill: none;
   pointer-events: all; }
 
-.path {
-  stroke-linejoin: round; }
+.toggle:hover .toggle-name, .toggle.toggle-highlight .toggle-name {
+  fill: white; }
+.toggle:hover .toggle-bg, .toggle.toggle-highlight .toggle-bg {
+  fill: #E30010; }
 
-.land-glow {
-  fill-opacity: .5;
-  filter: url(#blur); }
+.toggle {
+  cursor: pointer;
+  user-select: none; }
+  .toggle .toggle-bg {
+    stroke: #E30010;
+    fill: white; }
 
-.land-fill {
-  fill: #fff; }
+.slider-handle,
+.slider-play-icon {
+  fill: #909294;
+  cursor: pointer; }
 
-.state-boundary {
-  fill: none;
-  stroke: #888;
-  stroke-width: .70px; }
+.handle-axis .tick {
+  cursor: pointer; }
 
-.county-boundary {
-  fill: none; }
+.clickable-area {
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none; }
 
-.land-fill,
-.county-boundary {
-  stroke: #999;
-  stroke-width: .35px; }
+.button-bg {
+  fill: transparent; }
+
+.tooltip-container {
+  pointer-events: none; }
+
+.tooltip-bg {
+  fill: white;
+  stroke: black;
+  stroke-width: 1; }
 
 /*# sourceMappingURL=style.css.map */
