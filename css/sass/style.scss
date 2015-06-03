@@ -1,0 +1,72 @@
+@import 'colours';
+@import 'typography';
+
+#interactive {
+  width: 595px;
+}
+
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+%toggle-highlight {
+  .toggle-name {
+    fill: white;
+  }
+  .toggle-bg {
+    fill: nth($red, 1);
+  }
+}
+
+.toggle {
+  cursor: pointer;
+  user-select: none;
+
+  .toggle-bg {
+    stroke: nth($red, 1);
+    fill: white;
+  }
+  
+  &:hover {
+    @extend %toggle-highlight;
+  }
+
+  &.toggle-highlight {
+    @extend %toggle-highlight;
+  }
+}
+
+.slider-handle,
+.slider-play-icon {
+  fill: nth($grey, 6);
+  cursor: pointer;
+}
+
+.handle-axis {
+  .tick {
+    cursor: pointer;
+  }
+}
+
+.clickable-area {
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.button-bg {
+  fill: transparent;
+}
+
+.tooltip-container {
+  pointer-events: none;
+}
+.tooltip-bg {
+  fill: white;
+  stroke: black;
+  stroke-width: 1;
+}
+
+@import 'interactive';

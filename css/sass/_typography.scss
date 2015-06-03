@@ -1,0 +1,39 @@
+$font-stack: Officina, Calibri, Arial, sans-serif, Lucida Grande, Arial Unicode MS;
+$font-bold-stack: Officina_bold, Calibri, Arial, sans-serif, Lucida Grande, Arial Unicode MS;
+
+body {
+  font: 14px $font-stack;
+}
+
+.title {
+  font-family : $font-bold-stack;
+}
+.subtitle {
+  font-size : 14px;
+}
+
+.header-text {
+  // font-family: $font-stack;
+}
+.header-title {
+  font-size : 17px;
+}
+
+.endmatter {
+  margin: 10px 20px;
+  max-width: 555px;
+  font-size: 13px;
+}
+.note {
+  margin-left: 1.5em;
+  float: right;
+  text-align: right;
+}
+
+.toggle-title {
+  margin-right: 0.33em;
+}
+
+.axis-label {
+  font-style: italic;
+}
