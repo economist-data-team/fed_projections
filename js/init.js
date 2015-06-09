@@ -1,6 +1,6 @@
 /* global _,d3,machina */
 import {
-  isNumeric, parseNumerics,
+  isNumeric, parseNumerics, getTransformString,
   Interactive, Header
 } from 'framework';
 import colours from 'econ_colours';
@@ -52,40 +52,44 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       var parsed = _.map(data, parseNumerics);
       self.data = _.flattenDeep(_.map(parsed, function(d) {
         return _.map(values, function(v) {
-          // return _.times(d[v], function() {
           return {
             dateOfPrediction : d.dateOfPrediction,
             predictedRate : d.predictedRate,
             count : d[v],
             year : v
           };
-          // });
         });
       }));
-      // console.log(self.data);
-      // self.transition('loaded');
       self.transition('standard-dot');
     });
   },
   _setupPlot : function() {
     this._xScale = d3.scale.linear()
       .domain([2012, 2017])
-      .range([60, 520]);
+      .range([40, 520]);
     this.yScale = d3.scale.linear()
       .domain([0,5])
-      .range([500, 20]);
+      .range([470, 20]);
+
+    this.longerRunPoint = 700;
   },
   xScale : function(v) {
-    return v === 'longer_run' ? 700 : this._xScale(v);
+    return v === 'longer_run' ? this.longerRunPoint : this._xScale(v);
   },
   sessionScale : function(v) {
     return this._sessionScale(this.sessions.indexOf(v));
   },
-  renderStandardDot : function(data) {
+  renderStandardDot : function(dateOfPrediction) {
     var self = this;
+    var mainDuration = 250;
     var years = d3.range(2012, 2020);
 
-    var separated = _.groupBy(_.flatten(_.map(data, function(d) {
+    var filtered = _.filter(this.data, function(d) {
+      return d.dateOfPrediction === dateOfPrediction &&
+        d.count > 0;
+    });
+
+    var separated = _.groupBy(_.flatten(_.map(filtered, function(d) {
       return _.times(d.count, function(i) {
         return _.extend(_.clone(d), {
           index : i
@@ -93,25 +97,32 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       });
     })), 'year');
 
-    console.log(separated);
-
     var yearsRepresented = _.filter(parseNumerics(_.keys(separated, 'year')), function(n) {
       return isNumeric(n);
     });
 
-    this._xScale.domain([_.min(yearsRepresented) - 0.25, _.max(yearsRepresented) + 0.25]);
+    var xStretch = 0.25;
+    this._xScale.domain([_.min(yearsRepresented) - xStretch - 0.25, _.max(yearsRepresented) + xStretch]);
 
-    var r = 3.5;
+    var r = 3.25;
+
+    this.chart.selectAll('.point')
+      .data([]).exit()
+      // this is all of them
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
 
     _.each(years, function(year) {
       var join = self.chart.selectAll('.singlepoint-' + year)
         .data(separated[year] || []);
-      join.enter().append('svg:circle')
-        .classed('singlepoint singlepoint-'+year, true);
-      join.exit().remove();
+      join.exit()
+        .transition().duration(mainDuration)
+        .attr('opacity', 0)
+        .remove();
       join
-        .transition().duration(250)
         .attr('r', r - 1)
+        .transition().duration(mainDuration)
         .attr('cx', function(d) {
           return self.xScale(d.year) +
             d.index * r * 2 - d.count * r;
@@ -119,7 +130,47 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         .attr('cy', function(d) {
           return self.yScale(d.predictedRate);
         });
+      join.enter().append('svg:circle')
+        .classed('singlepoint singlepoint-'+year, true)
+        .attr('opacity', 0)
+        .attr('r', r - 1)
+        .attr('cx', function(d) {
+          return self.xScale(d.year) +
+            d.index * r * 2 - d.count * r;
+        })
+        .attr('cy', function(d) {
+          return self.yScale(d.predictedRate);
+        })
+        .transition().duration(mainDuration)
+        .delay(function(d,i) {
+          return i * 20;
+        })
+        .attr('opacity', 1);
     });
+
+    var xAxis = d3.svg.axis()
+      .outerTickSize(1)
+      .tickFormat(d3.format('i'))
+      .tickValues(yearsRepresented)
+      .scale(this._xScale);
+    this.chart.guarantee('.x-axis', 'svg:g')
+      .classed('axis x-axis', true)
+      .attr('transform', getTransformString(0, this.yScale.range()[0]))
+      .transition().duration(mainDuration)
+      .call(xAxis);
+
+    var yAxis = d3.svg.axis()
+      .outerTickSize(1)
+      .orient('left')
+      .scale(this.yScale);
+    this.chart.guarantee('.y-axis', 'svg:g')
+      .classed('axis y-axis', true)
+      .attr('transform', getTransformString(this._xScale.range()[0], 0))
+      .transition().duration(mainDuration)
+      .call(yAxis);
+  },
+  renderMultiDot : function() {
+
   },
   initialState : 'uninitialized',
   states : {
@@ -160,12 +211,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       _onEnter : function() {
         var self = this;
 
-        var filtered = _.filter(this.data, function(d) {
-          return d.dateOfPrediction === '2012-01-01' &&
-            d.count > 0;
-        });
-
-        this.renderStandardDot(filtered);
+        this.renderStandardDot('2012-01-01');
       }
     }
   }
