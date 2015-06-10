@@ -1,7 +1,7 @@
-/* global _,d3,machina */
+/* global _,d3,machina,math */
 import {
   isNumeric, parseNumerics, getTransformString,
-  Interactive, Header
+  Interactive, Header, ToggleGroup
 } from 'framework';
 import colours from 'econ_colours';
 
@@ -16,6 +16,21 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       title : 'Declining optimism',
       subtitle : 'Subtitle'
     }, Header);
+
+    this.toggle = this.interactive.addSection({
+      name : 'toggles',
+      toggles : [
+        {
+          name : 'Dot plot',
+          state : 'standard-dot',
+          click : function() { self.transition('standard-dot'); }
+        }, {
+          name : 'Combined plot',
+          state : 'combined-dot',
+          click : function() { self.transition('loaded'); }
+        }
+      ]
+    }, ToggleGroup);
 
     this.chart = this.interactive.addSection({
       name : 'main-chart',
@@ -188,7 +203,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .transition().duration(mainDuration)
       .attr('cx', function(d) {
         return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
-      });
+      })
+      .remove();
 
     var join = this.chart.selectAll('.point')
       .data(filtered);
@@ -207,6 +223,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('fill', function(d) {
         return self.sessionColours[d.dateOfPrediction];
       });
+    join.exit()
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
 
     var xAxis = d3.svg.axis()
       .outerTickSize(1)
@@ -229,6 +249,30 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .transition().duration(mainDuration)
       .call(yAxis);
   },
+  renderMedians : function(sessions, years) {
+    var self = this;
+    var mainDuration = 250;
+
+    sessions = sessions || this.sessions;
+
+    var filtered = _.filter(this.data, function(d) {
+      if(years && years.indexOf(d.year) === -1) { return false; }
+      return sessions.indexOf(d.dateOfPrediction) > -1 && d.count > 0;
+    });
+
+    var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
+      return isNumeric(y);
+    });
+
+    console.log(filtered);
+    var medians = _.map(yearsRepresented, function(y) {
+
+    });
+    console.log(medians);
+
+    var pointJoin = this.chart.selectAll('.point')
+      .transition().duration(mainDuration);
+  },
   initialState : 'uninitialized',
   states : {
     'uninitialized' : {
@@ -244,6 +288,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     'standard-dot' : {
       _onEnter : function() {
         this.renderStandardDot('2012-01-01');
+      }
+    },
+    'medians' : {
+      _onEnter : function() {
+        this.renderMedians();
       }
     }
   }

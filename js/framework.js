@@ -128,6 +128,9 @@ Section.prototype.getHeight = function() {
   return this.options.height ||
     this.wrapper.node().getBoundingClientRect().height;
 };
+Section.prototype.getUseableHeight = function() {
+  return this.getHeight() - this.margin.top - this.margin.bottom;
+};
 Section.prototype.getBoundingClientRect = function() {
   return this.wrapper.node().getBoundingClientRect();
 };
@@ -562,7 +565,8 @@ Slider.prototype.constructor = Section;
 Slider.prototype.axisFormat = d3.format();
 Slider.prototype.options = _.extend(Section.prototype.options, {
   margin : parseMarginArray([0,10]),
-  playButton : true
+  playButton : true,
+  refineValue : function(v) { return v; }
 });
 Slider.prototype.render = function() {
   var self = this;
@@ -606,9 +610,13 @@ Slider.prototype.render = function() {
       self._setToPosition(d3.event.x);
     });
 
-  this._drawPlay().on('click', function() {
-    self._playToggle();
-  });
+  if(this.options.playButton) {
+    this._drawPlay().on('click', function() {
+      self._playToggle();
+    });
+  }
+
+  this.set(this.scale.domain()[0]);
 };
 Slider.prototype._playToggle = function() {
   if(this.playing) {
@@ -662,18 +670,20 @@ Slider.prototype._drawStop = function() {
 Slider.prototype._setToPosition = function(xValue, noRefine) {
   var range = this.scale.range();
   var finalX = Math.max(Math.min(xValue, range[1]), range[0]);
-  if(this.options.refineValue && !noRefine) {
+  if(!noRefine) {
     finalX = this.scale(
       this.options.refineValue(this.scale.invert(finalX))
     );
   }
   this.handle.attr('transform', getTransformString(finalX, 0));
-  return this.scale.invert(finalX);
+  this.value = this.scale.invert(finalX);
+  return this.value;
 };
 Slider.prototype.set = function(value) {
   var v = this._setToPosition(this.scale(value));
+  this.value = v;
   if(this.releaseCallback) { this.releaseCallback(v); }
-  return v;
+  return this.value;
 };
 Slider.prototype.drag = function() {
   this.lastDrag = d3.event.x;
@@ -681,8 +691,9 @@ Slider.prototype.drag = function() {
   var range = this.scale.range();
   var x = Math.max(Math.min(d3.event.x, range[1]), range[0]);
   this.handle.attr('transform', getTransformString(x, 0));
+  this.value = this.options.refineValue(this.scale.invert(x));
   // drag function is called with the value from the scale
-  return this.dragCallback && this.dragCallback(this.scale.invert(x));
+  return this.dragCallback && this.dragCallback(this.value);
 };
 Slider.prototype.release = function() {
   // we don't always have a last drag, in the event that all the user
@@ -691,9 +702,9 @@ Slider.prototype.release = function() {
     d3.event.sourceEvent.pageX - this.container.node()
       .getBoundingClientRect().left;
 
-  var value = this._setToPosition(x);
-  if(this.releaseCallback) { this.releaseCallback(value); }
-  return value;
+  this.value = this._setToPosition(x);
+  if(this.releaseCallback) { this.releaseCallback(this.value); }
+  return this.value;
 };
 Slider.prototype.duration = 1000;
 Slider.prototype.play = function() {
@@ -731,4 +742,73 @@ Slider.prototype.stop = function() {
   this.playing = false;
   this.stopCallback();
   this._drawPlay();
+};
+
+export function ToggleGroup(parent, options) {
+  this.initialize.apply(this, arguments);
+}
+ToggleGroup.prototype = Object.create(Section.prototype);
+ToggleGroup.prototype.constructor = ToggleGroup;
+ToggleGroup.prototype.render = function() {
+  var self = this;
+
+  var toggles = this.options.toggles;
+
+  var toggleJoin = this.container.selectAll('.toggle')
+    .data(toggles);
+  toggleJoin.exit().remove();
+  var toggleEnter = toggleJoin.enter().append('svg:g')
+    .classed('toggle', true);
+  toggleEnter.append('svg:rect')
+    .classed('toggle-bg', true)
+    .attr({ height : 23 });
+  toggleEnter.append('svg:text')
+    .classed('toggle-name', true)
+    .attr({x : 5, y : 16});
+
+  toggleJoin.each(function(d) {
+    var g = d3.select(this);
+    g.select('.toggle-name')
+      .text(d.name);
+    for(var k in d) { if(d.hasOwnProperty(k) && _.isString(d[k])) {
+      this.setAttribute('data-'+k, d[k]);
+    }}
+  })
+  .on('click', function(d) {
+    return d.click && d.click.apply(this, arguments);
+  })
+  .on('touchstart', function(d) {
+    return d.touchstart && d.touchstart.apply(this, arguments);
+  });
+
+  var toggleTitle = this.container.select('.toggle-title');
+  if(!toggleTitle.node()) {
+    toggleTitle = this.container.append('svg:text')
+      .classed('toggle-title', true);
+  }
+  toggleTitle.text(this.options.toggleTitle)
+    .attr({x : -5, y: 16})
+    .attr('text-anchor', 'end');
+
+  // we tie this to load so it re-updates once the fonts have loaded;
+  // this gives a bit of a jump but it's better than it being weirdly
+  // cut off
+  this.updatePositions();
+  window.addEventListener('load', _.bind(this.updatePositions, this));
+};
+ToggleGroup.prototype.updatePositions = function() {
+  var toggles = this.container.selectAll('.toggle');
+
+  var widthCursor = 0;
+  toggles.each(function(){
+    var toggle = d3.select(this);
+    var name = toggle.select('.toggle-name');
+    var bg = toggle.select('.toggle-bg');
+    var textWidth = name.node().getBoundingClientRect().width;
+    bg.attr('width', textWidth + 10);
+
+    toggle.attr('transform', getTransformString(widthCursor, 0));
+
+    widthCursor += textWidth + 10;
+  });
 };
