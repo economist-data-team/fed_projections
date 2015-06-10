@@ -13,7 +13,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.interactive = new Interactive('#interactive');
 
     this.header = this.interactive.addSection({
-      title : 'Declining optimism',
+      title : 'Irrational exuberance',
       subtitle : 'Subtitle'
     }, Header);
 
@@ -28,6 +28,14 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           name : 'Combined plot',
           state : 'combined-dot',
           click : function() { self.transition('loaded'); }
+        }, {
+          name : 'Medians',
+          state : 'medians',
+          click : function() { self.transition('medians'); }
+        }, {
+          name : 'Means',
+          state : 'means',
+          click : function() { self.transition('means'); }
         }
       ]
     }, ToggleGroup);
@@ -75,7 +83,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           };
         });
       }));
-      self.transition('standard-dot');
+      self.transition('loaded');
     });
   },
   _setupPlot : function() {
@@ -97,7 +105,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
   renderStandardDot : function(dateOfPrediction) {
     var self = this;
     var mainDuration = 250;
-    var years = d3.range(2012, 2020);
+    var years = d3.range(2012, 2020).concat(['longer_run']);
 
     var filtered = _.filter(this.data, function(d) {
       return d.dateOfPrediction === dateOfPrediction &&
@@ -122,6 +130,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     var r = 3.25;
 
     this.chart.selectAll('.point')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
+
+    this.chart.selectAll('.median-line')
       .transition().duration(mainDuration)
       .attr('opacity', 0)
       .remove();
@@ -161,26 +174,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         .attr('opacity', 1);
     });
 
-    var xAxis = d3.svg.axis()
-      .outerTickSize(1)
-      .tickFormat(d3.format('i'))
-      .tickValues(yearsRepresented)
-      .scale(this._xScale);
-    this.chart.guarantee('.x-axis', 'svg:g')
-      .classed('axis x-axis', true)
-      .attr('transform', getTransformString(0, this.yScale.range()[0]))
-      .transition().duration(mainDuration)
-      .call(xAxis);
-
-    var yAxis = d3.svg.axis()
-      .outerTickSize(1)
-      .orient('left')
-      .scale(this.yScale);
-    this.chart.guarantee('.y-axis', 'svg:g')
-      .classed('axis y-axis', true)
-      .attr('transform', getTransformString(this._xScale.range()[0], 0))
-      .transition().duration(mainDuration)
-      .call(yAxis);
+    this.renderAxes(yearsRepresented, mainDuration);
   },
   renderMultiDot : function(sessions) {
     var self = this;
@@ -209,8 +203,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     var join = this.chart.selectAll('.point')
       .data(filtered);
     join.enter().append('svg:circle')
-      .classed('point', true);
+      .classed('point', true)
+      .attr('opacity', 0);
     join
+      .transition().duration(mainDuration)
+      .attr('opacity', 1)
       .attr('r', function(d) {
         return self.sizeScale(d.count);
       })
@@ -228,6 +225,106 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('opacity', 0)
       .remove();
 
+    // remove median lines
+    this.chart.selectAll('.median-line')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
+
+    this.renderAxes(yearsRepresented, mainDuration);
+  },
+  renderSummaryLines : function(sessions, years, summaryFunction) {
+    var self = this;
+    var mainDuration = 250;
+
+    summaryFunction = summaryFunction || 'median';
+
+    sessions = sessions || this.sessions;
+
+    var filtered = _.filter(this.data, function(d) {
+      if(years && years.indexOf(d.year) === -1) { return false; }
+      return sessions.indexOf(d.dateOfPrediction) > -1 && d.count > 0;
+    });
+
+    var yearGroups = _.groupBy(filtered, 'year');
+
+    var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
+      return isNumeric(y);
+    });
+
+    var xStretch = 0.5;
+    this._xScale.domain([_.min(yearsRepresented) - xStretch - 0.25, _.max(yearsRepresented) + xStretch]);
+
+    var indexedSummary = {};
+    var summary = _.map(yearGroups, function(v, year) {
+      var predictions = _.groupBy(v, 'dateOfPrediction');
+      var valueArrays = _.mapValues(predictions, function(counts) {
+        return _.flatten(_.map(counts, function(d) {
+          return _.times(d.count, function() {
+            return d.predictedRate;
+          });
+        }));
+      });
+      return _.map(valueArrays, function(d, k) {
+        var ret = {
+          year : year,
+          dateOfPrediction : k,
+          summaryValue : math[summaryFunction](d)
+        };
+        if(!indexedSummary[year]) { indexedSummary[year] = {}; }
+        indexedSummary[year][k] = ret;
+        return ret;
+      });
+    });
+
+    var line = d3.svg.line()
+      .x(function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      })
+      .y(function(d) {
+        return self.yScale(d.summaryValue);
+      });
+
+    var join = this.chart.selectAll('.median-line')
+      .data(summary);
+    join.exit()
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
+    join.enter().append('svg:path')
+      .classed('median-line', true)
+      .attr('opacity', 0);
+    join
+      .attr('stroke', 'black')
+      .attr('fill', 'none')
+      .transition().duration(mainDuration)
+      .attr('opacity', 1)
+      .attr('d', line);
+
+    // collapse points to their position on median lines
+    this.chart.selectAll('.point')
+      .transition().duration(mainDuration)
+      .attr('cy', function(d) {
+        return self.yScale(indexedSummary[d.year][d.dateOfPrediction].summaryValue);
+      })
+      .attr('opacity', 0)
+      .remove();
+
+    // collapse a dot plot to its position on a median line
+    this.chart.selectAll('.singlepoint')
+      .transition().duration(mainDuration)
+      .attr('cx', function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      })
+      .attr('cy', function(d) {
+        return self.yScale(indexedSummary[d.year][d.dateOfPrediction].summaryValue);
+      })
+      .attr('opacity', 0)
+      .remove();
+
+    this.renderAxes(yearsRepresented, mainDuration);
+  },
+  renderAxes : function(yearsRepresented, mainDuration) {
     var xAxis = d3.svg.axis()
       .outerTickSize(1)
       .tickFormat(d3.format('i'))
@@ -249,30 +346,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .transition().duration(mainDuration)
       .call(yAxis);
   },
-  renderMedians : function(sessions, years) {
-    var self = this;
-    var mainDuration = 250;
-
-    sessions = sessions || this.sessions;
-
-    var filtered = _.filter(this.data, function(d) {
-      if(years && years.indexOf(d.year) === -1) { return false; }
-      return sessions.indexOf(d.dateOfPrediction) > -1 && d.count > 0;
-    });
-
-    var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
-      return isNumeric(y);
-    });
-
-    console.log(filtered);
-    var medians = _.map(yearsRepresented, function(y) {
-
-    });
-    console.log(medians);
-
-    var pointJoin = this.chart.selectAll('.point')
-      .transition().duration(mainDuration);
-  },
   initialState : 'uninitialized',
   states : {
     'uninitialized' : {
@@ -292,7 +365,12 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'medians' : {
       _onEnter : function() {
-        this.renderMedians();
+        this.renderSummaryLines(undefined, undefined, 'median');
+      }
+    },
+    'means' : {
+      _onEnter : function() {
+        this.renderSummaryLines(undefined, undefined, 'mean');
       }
     }
   }
