@@ -66,7 +66,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
   _setupPlot : function() {
     this._xScale = d3.scale.linear()
       .domain([2012, 2017])
-      .range([40, 520]);
+      .range([40, 550]);
     this.yScale = d3.scale.linear()
       .domain([0,5])
       .range([470, 20]);
@@ -107,8 +107,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     var r = 3.25;
 
     this.chart.selectAll('.point')
-      .data([]).exit()
-      // this is all of them
       .transition().duration(mainDuration)
       .attr('opacity', 0)
       .remove();
@@ -169,8 +167,67 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .transition().duration(mainDuration)
       .call(yAxis);
   },
-  renderMultiDot : function() {
+  renderMultiDot : function(sessions) {
+    var self = this;
+    var mainDuration = 250;
 
+    sessions = sessions || this.sessions;
+
+    var filtered = _.filter(this.data, function(d) {
+      return sessions.indexOf(d.dateOfPrediction) > -1 && d.count > 0;
+    });
+
+    var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
+      return isNumeric(y);
+    });
+
+    var xStretch = 0.5;
+    this._xScale.domain([_.min(yearsRepresented) - xStretch - 0.25, _.max(yearsRepresented) + xStretch]);
+
+    this.chart.selectAll('.singlepoint')
+      .transition().duration(mainDuration)
+      .attr('cx', function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      });
+
+    var join = this.chart.selectAll('.point')
+      .data(filtered);
+    join.enter().append('svg:circle')
+      .classed('point', true);
+    join
+      .attr('r', function(d) {
+        return self.sizeScale(d.count);
+      })
+      .attr('cx', function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      })
+      .attr('cy', function(d) {
+        return self.yScale(d.predictedRate);
+      })
+      .attr('fill', function(d) {
+        return self.sessionColours[d.dateOfPrediction];
+      });
+
+    var xAxis = d3.svg.axis()
+      .outerTickSize(1)
+      .tickFormat(d3.format('i'))
+      .tickValues(yearsRepresented)
+      .scale(this._xScale);
+    this.chart.guarantee('.x-axis', 'svg:g')
+      .classed('axis x-axis', true)
+      .attr('transform', getTransformString(0, this.yScale.range()[0]))
+      .transition().duration(mainDuration)
+      .call(xAxis);
+
+    var yAxis = d3.svg.axis()
+      .outerTickSize(1)
+      .orient('left')
+      .scale(this.yScale);
+    this.chart.guarantee('.y-axis', 'svg:g')
+      .classed('axis y-axis', true)
+      .attr('transform', getTransformString(this._xScale.range()[0], 0))
+      .transition().duration(mainDuration)
+      .call(yAxis);
   },
   initialState : 'uninitialized',
   states : {
@@ -181,36 +238,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'loaded' : {
       _onEnter : function() {
-        var self = this;
-
-        var filtered = _.filter(this.data, function(d) {
-          return d.dateOfPrediction !== 'longer_run' && d.count > 0;
-        });
-
-        var join = this.chart.selectAll('.point')
-          .data(filtered);
-        join.enter().append('svg:circle')
-          .classed('point', true);
-        join
-          .attr('r', function(d) {
-            return self.sizeScale(d.count);
-          })
-          .attr('cx', function(d) {
-            return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
-          })
-          .attr('cy', function(d) {
-            return self.yScale(d.predictedRate);
-          })
-          .attr('fill', function(d) {
-            return self.sessionColours[d.dateOfPrediction];
-          });
-        this.interactive.recalculateSections();
+        this.renderMultiDot();
       }
     },
     'standard-dot' : {
       _onEnter : function() {
-        var self = this;
-
         this.renderStandardDot('2012-01-01');
       }
     }
