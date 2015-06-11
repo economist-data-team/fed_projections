@@ -27,11 +27,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         }, {
           name : 'Combined plot',
           state : 'combined-dot',
-          click : function() { self.transition('loaded'); }
-        }, {
-          name : 'Medians',
-          state : 'medians',
-          click : function() { self.transition('medians'); }
+          click : function() { self.transition('multiDot'); }
         }, {
           name : 'Means',
           state : 'means',
@@ -45,6 +41,14 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       margin : [20],
       height: 520
     });
+
+    this.mainDriver = this.interactive.addSection({
+      name : 'main-selector',
+      toggles : [{
+        name : 'Next',
+        click : function() { self.handle('next'); }
+      }]
+    }, ToggleGroup);
 
     this._setupPlot();
 
@@ -83,7 +87,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           };
         });
       }));
-      self.transition('loaded');
+      self.transition('multiDot');
     });
   },
   _setupPlot : function() {
@@ -241,11 +245,50 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     this.renderAxes(yearsRepresented, mainDuration);
   },
+  getSummaries : function(summaryFunction) {
+    var self = this;
+
+    summaryFunction = summaryFunction || 'mean';
+
+    var filtered = _.filter(this.data, function(d) {
+      return self.sessions.indexOf(d.dateOfPrediction) > -1 && d.count > 0;
+    });
+
+    var yearGroups = _.groupBy(filtered, 'year');
+
+    var indexedSummary = {};
+    var summary = _.map(yearGroups, function(v, year) {
+      var predictions = _.groupBy(v, 'dateOfPrediction');
+      var valueArrays = _.mapValues(predictions, function(counts) {
+        return _.flatten(_.map(counts, function(d) {
+          return _.times(d.count, function() {
+            return d.predictedRate;
+          });
+        }));
+      });
+      return _.map(valueArrays, function(d, k) {
+        var ret = {
+          year : year,
+          dateOfPrediction : k,
+          summaryValue : math[summaryFunction](d)
+        };
+        if(!indexedSummary[year]) { indexedSummary[year] = {}; }
+        indexedSummary[year][k] = ret;
+        return ret;
+      });
+    });
+
+    return {
+      yearGroups : yearGroups,
+      summary : summary,
+      indexedSummary : indexedSummary
+    };
+  },
   renderSummaryLines : function(sessions, years, summaryFunction) {
     var self = this;
     var mainDuration = 250;
 
-    summaryFunction = summaryFunction || 'median';
+    summaryFunction = summaryFunction || 'mean';
 
     sessions = sessions || this.sessions;
 
@@ -256,9 +299,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     var yearGroups = _.groupBy(filtered, 'year');
 
-    var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
-      return isNumeric(y);
-    });
+    // var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
+    //   return isNumeric(y);
+    // });
+
+    var yearsRepresented = _.filter(_.keys(yearGroups), isNumeric);
 
     var xStretch = 0.5;
     this._xScale.domain([_.min(yearsRepresented) - xStretch - 0.25, _.max(yearsRepresented) + xStretch]);
@@ -381,7 +426,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         this.interactive.recalculateSections();
       }
     },
-    'loaded' : {
+    'multiDot' : {
       _onEnter : function() {
         this.renderMultiDot();
       }
@@ -389,11 +434,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     'standard-dot' : {
       _onEnter : function() {
         this.renderStandardDot('2012-01-01');
-      }
-    },
-    'medians' : {
-      _onEnter : function() {
-        this.renderSummaryLines(undefined, undefined, 'median');
       }
     },
     'means' : {
