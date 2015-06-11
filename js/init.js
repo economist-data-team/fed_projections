@@ -32,7 +32,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
                time wore on, their optimism faded. By September 2014, only one still\
                thought the rate would rise. (The slight drop in predictions in late 2014\
                is because the committee began allowing predictions in quarter point\
-               intervals, rather than only half point.)"
+               intervals, rather than only half point.)",
+    'six' :   "The story is pretty similar for 2015."
   },
   initialize : function() {
     var self = this;
@@ -71,10 +72,18 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     this.mainDriver = this.interactive.addSection({
       name : 'main-selector',
-      toggles : [{
-        name : 'Next',
-        click : function() { self.handle('next'); }
-      }]
+      toggles : _.map(_.keys(this.texts), function(k,i) {
+        return {
+          name : 1 + i,
+          state : k,
+          click : function() { self.transition(k); }
+        };
+      }).concat([
+        {
+          name : 'Next',
+          click : function() { self.handle('next'); }
+        }
+      ]),
     }, ToggleGroup);
 
     this._setupPlot();
@@ -211,13 +220,14 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     this.renderAxes(yearsRepresented, mainDuration);
   },
-  renderMultiDot : function(sessions) {
+  renderMultiDot : function(sessions, years) {
     var self = this;
     var mainDuration = 250;
 
     sessions = sessions || this.sessions;
 
     var filtered = _.filter(this.data, function(d) {
+      if(years && years.indexOf(d.year) === -1) { return false; }
       return sessions.indexOf(d.dateOfPrediction) > -1 && d.count > 0;
     });
 
@@ -226,7 +236,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     });
 
     var xStretch = 0.5;
-    this._xScale.domain([_.min(yearsRepresented) - xStretch - 0.25, _.max(yearsRepresented) + xStretch]);
+    this._xScale.domain([_.min(yearsRepresented) - xStretch, _.max(yearsRepresented) + xStretch]);
+
+    var sessionScaleSpread = 200 / yearsRepresented.length;
+    this._sessionScale.range([-sessionScaleSpread, sessionScaleSpread]);
 
     this.chart.selectAll('.singlepoint')
       .transition().duration(mainDuration)
@@ -499,6 +512,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'four' : {
       _onEnter : function() {
+        this.renderMultiDot(undefined, [2014]);
         this.setText('four');
       },
       next : function() {
@@ -511,6 +525,14 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       },
       next : function() {
         this.transition('six');
+      }
+    },
+    'six' : {
+      _onEnter : function() {
+        this.setText('six');
+      },
+      next : function() {
+        this.transition('seven');
       }
     },
   }
