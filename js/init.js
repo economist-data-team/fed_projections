@@ -138,6 +138,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .transition().duration(mainDuration)
       .attr('opacity', 0)
       .remove();
+    this.chart.selectAll('.median-dot')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
 
     _.each(years, function(year) {
       var join = self.chart.selectAll('.singlepoint-' + year)
@@ -230,6 +234,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .transition().duration(mainDuration)
       .attr('opacity', 0)
       .remove();
+    this.chart.selectAll('.median-dot')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
 
     this.renderAxes(yearsRepresented, mainDuration);
   },
@@ -285,21 +293,41 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         return self.yScale(d.summaryValue);
       });
 
-    var join = this.chart.selectAll('.median-line')
+    var summaryLineJoin = this.chart.selectAll('.median-line')
       .data(summary);
-    join.exit()
+    summaryLineJoin.exit()
       .transition().duration(mainDuration)
       .attr('opacity', 0)
       .remove();
-    join.enter().append('svg:path')
+    summaryLineJoin.enter().append('svg:path')
       .classed('median-line', true)
       .attr('opacity', 0);
-    join
+    summaryLineJoin
       .attr('stroke', 'black')
       .attr('fill', 'none')
       .transition().duration(mainDuration)
       .attr('opacity', 1)
       .attr('d', line);
+
+    var summaryDotJoin = this.chart.selectAll('.median-dot')
+      .data(_.flatten(summary));
+    summaryDotJoin.exit()
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
+    summaryDotJoin.enter().append('svg:circle')
+      .classed('median-dot', true)
+      .attr('opacity', 0);
+    summaryDotJoin
+      .attr('r', 2.5)
+      .transition().duration(mainDuration)
+      .attr('cx', function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      })
+      .attr('cy', function(d) {
+        return self.yScale(d.summaryValue);
+      })
+      .attr('opacity', 1);
 
     // collapse points to their position on median lines
     this.chart.selectAll('.point')
