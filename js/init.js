@@ -1,4 +1,5 @@
 /* global _,d3,machina,math */
+/* jshint multistr:true */
 import {
   isNumeric, parseNumerics, getTransformString,
   Interactive, Header, ToggleGroup
@@ -7,6 +8,32 @@ import colours from 'econ_colours';
 
 
 var mainFSM = window.mainFSM = new machina.Fsm({
+  texts : {
+    'one'   : "Eight times a year, the Federal Reserve’s Open Market Committee \
+               meets to consider its policy and amend the federal funds rate—\
+               the interest rate at which the Federal Reserve lends money to other\
+               banks. In December of 2008, they lowered the federal funds rate to\
+               0.25. They have not changed it since.",
+    'two'   : "Since 2012, about four times a year the committee’s members make\
+               predictions about where the federal funds rate will be at the end\
+               of the next several years. These predictions are released in the form\
+               of ‘dot plots’ like the one above. Each dot represents one member's\
+               prediction for the end of each year. This prediction was made in January 2012.",
+    'three' : "The committee members are often quite bullish on the federal funds rate. \
+               At the beginning of 2012, five (of 17) committee members expected the rate to be\
+               two percent or more by the end of 2014; even as late as December 2012 (above),\
+               one member still expected that. At the end of 2014, however, it remained\
+               at 0.25.",
+    'four' :  "Let’s take a broader look at the Fed committee’s predictions. Instead\
+               of showing a separate dot for each member of the committee, we’ll just\
+               use larger dots for rates favoured by more members.",
+    'five' :  "Here are all of the committee’s predictions for 2014. In 2012, most\
+               members thought they would raise the rate by the end of 2014, but as\
+               time wore on, their optimism faded. By September 2014, only one still\
+               thought the rate would rise. (The slight drop in predictions in late 2014\
+               is because the committee began allowing predictions in quarter point\
+               intervals, rather than only half point.)"
+  },
   initialize : function() {
     var self = this;
 
@@ -87,7 +114,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           };
         });
       }));
-      self.transition('multiDot');
+      self.transition('one');
     });
   },
   _setupPlot : function() {
@@ -419,6 +446,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .transition().duration(mainDuration)
       .call(yAxis);
   },
+  setText : function(key) {
+    document.getElementById('frametext').innerHTML = this.texts[key];
+  },
   initialState : 'uninitialized',
   states : {
     'uninitialized' : {
@@ -440,6 +470,48 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       _onEnter : function() {
         this.renderSummaryLines(undefined, undefined, 'mean');
       }
-    }
+    },
+    'one' : {
+      _onEnter : function() {
+        this.setText('one');
+      },
+      next : function() {
+        this.transition('two');
+      }
+    },
+    'two' : {
+      _onEnter : function() {
+        this.renderStandardDot('2012-01-01');
+        this.setText('two');
+      },
+      next : function() {
+        this.transition('three');
+      }
+    },
+    'three' : {
+      _onEnter : function() {
+        this.renderStandardDot('2012-12-01');
+        this.setText('three');
+      },
+      next : function() {
+        this.transition('four');
+      }
+    },
+    'four' : {
+      _onEnter : function() {
+        this.setText('four');
+      },
+      next : function() {
+        this.transition('five');
+      }
+    },
+    'five' : {
+      _onEnter : function() {
+        this.setText('five');
+      },
+      next : function() {
+        this.transition('six');
+      }
+    },
   }
 });
