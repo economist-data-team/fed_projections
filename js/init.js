@@ -304,7 +304,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       if(years && years.indexOf(d.year) === -1) { return false; }
       return sessions.indexOf(d.dateOfPrediction) > -1 && d.count > 0;
     });
-
     var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
       return isNumeric(y);
     });
@@ -316,12 +315,16 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this._sessionScale.range([-sessionScaleSpread, sessionScaleSpread]);
 
     _.each(this.sessions, function(session) {
-      var join = self.chart.selectAll('.point[data-session="'+session+'"]')
-        .data(_.sortBy(_.filter(filtered, function(d) {
+      var data = _.sortBy(
+        _.filter(filtered, function(d) {
           return d.dateOfPrediction === session;
-        })), function(d) {
+        }),
+        function(d) {
           return d.predictedRate;
-        });
+        }
+      );
+      var join = self.chart.selectAll('.point[data-session="'+session+'"]')
+        .data(data);
       var joinEnter = join.enter().append('svg:circle')
         .classed('point', true)
         .attr('opacity', 0)
