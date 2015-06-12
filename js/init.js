@@ -162,7 +162,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     years = years || d3.range(2005, 2016);
 
-
     var line = d3.svg.line()
       .interpolate('step-after')
       .x(function(d) {
@@ -190,9 +189,12 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('opacity', 1)
       .attr('d', line);
 
+    this.removeStandardDot(mainDuration);
+    this.removeMultiDot(mainDuration);
+    this.removeSummaryLines(mainDuration);
     this.renderAxes(years, mainDuration);
   },
-  removeRateLine : function(mainDuration) {
+  removeRates : function(mainDuration) {
     var self = this;
 
     var line = d3.svg.line()
@@ -239,20 +241,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     var r = 3.25;
 
-    this.chart.selectAll('.point')
-      .transition().duration(mainDuration)
-      .attr('opacity', 0)
-      .remove();
-
-    this.chart.selectAll('.median-line')
-      .transition().duration(mainDuration)
-      .attr('opacity', 0)
-      .remove();
-    this.chart.selectAll('.median-dot')
-      .transition().duration(mainDuration)
-      .attr('opacity', 0)
-      .remove();
-
     _.each(years, function(year) {
       var join = self.chart.selectAll('.singlepoint-' + year)
         .data(separated[year] || []);
@@ -288,8 +276,22 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         .attr('opacity', 1);
     });
 
-    this.removeRateLine(mainDuration);
+    this.removeRates(mainDuration);
+    this.removeMultiDot(mainDuration);
+    this.removeSummaryLines(mainDuration);
     this.renderAxes(yearsRepresented, mainDuration);
+  },
+  removeStandardDot : function(mainDuration, options) {
+    options = _.extend({}, options);
+
+    var transition = this.chart.selectAll('.singlepoint')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0);
+
+    if(options.cx) { transition.attr('cx', options.cx); }
+    if(options.cy) { transition.attr('cy', options.cy); }
+
+    transition.remove();
   },
   renderMultiDot : function(sessions, years) {
     var self = this;
@@ -311,13 +313,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     var sessionScaleSpread = 200 / yearsRepresented.length;
     this._sessionScale.range([-sessionScaleSpread, sessionScaleSpread]);
-
-    this.chart.selectAll('.singlepoint')
-      .transition().duration(mainDuration)
-      .attr('cx', function(d) {
-        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
-      })
-      .remove();
 
     var join = this.chart.selectAll('.point')
       .data(filtered);
@@ -344,18 +339,26 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('opacity', 0)
       .remove();
 
-    // remove median lines
-    this.chart.selectAll('.median-line')
-      .transition().duration(mainDuration)
-      .attr('opacity', 0)
-      .remove();
-    this.chart.selectAll('.median-dot')
-      .transition().duration(mainDuration)
-      .attr('opacity', 0)
-      .remove();
-
-    this.removeRateLine(mainDuration);
+    this.removeRates(mainDuration);
+    this.removeSummaryLines();
+    this.removeStandardDot(mainDuration, {
+      cx : function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      }
+    });
     this.renderAxes(yearsRepresented, mainDuration);
+  },
+  removeMultiDot : function(mainDuration, options) {
+    options = _.extend({}, options);
+
+    var transition = this.chart.selectAll('.point')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0);
+
+    if(options.cx) { transition.attr('cx', options.cx); }
+    if(options.cy) { transition.attr('cy', options.cy); }
+
+    transition.remove();
   },
   getSummaries : function(summaryFunction) {
     var self = this;
@@ -484,29 +487,34 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       })
       .attr('opacity', 1);
 
-    // collapse points to their position on median lines
-    this.chart.selectAll('.point')
-      .transition().duration(mainDuration)
-      .attr('cy', function(d) {
-        return self.yScale(indexedSummary[d.year][d.dateOfPrediction].summaryValue);
-      })
-      .attr('opacity', 0)
-      .remove();
-
-    // collapse a dot plot to its position on a median line
-    this.chart.selectAll('.singlepoint')
-      .transition().duration(mainDuration)
-      .attr('cx', function(d) {
+    this.removeRates(mainDuration);
+    this.removeStandardDot(mainDuration, {
+      cx : function(d) {
         return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
-      })
-      .attr('cy', function(d) {
+      },
+      cy : function(d) {
         return self.yScale(indexedSummary[d.year][d.dateOfPrediction].summaryValue);
-      })
+      }
+    });
+    this.removeMultiDot(mainDuration, {
+      cx : function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      },
+      cy : function(d) {
+        return self.yScale(indexedSummary[d.year][d.dateOfPrediction].summaryValue);
+      }
+    });
+    this.renderAxes(yearsRepresented, mainDuration);
+  },
+  removeSummaryLines : function(mainDuration, options) {
+    this.chart.selectAll('.median-line')
+      .transition().duration(mainDuration)
       .attr('opacity', 0)
       .remove();
-
-    this.removeRateLine(mainDuration);
-    this.renderAxes(yearsRepresented, mainDuration);
+    this.chart.selectAll('.median-dot')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
   },
   renderAxes : function(yearsRepresented, mainDuration) {
     var xAxis = d3.svg.axis()
