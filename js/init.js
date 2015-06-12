@@ -64,7 +64,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       height: 520
     });
 
-    this.mainDriver = this.interactive.addSection({
+    this.mainToggles = this.interactive.addSection({
       name : 'main-selector',
       toggles : _.map(_.keys(this.texts), function(k,i) {
         return {
@@ -416,6 +416,13 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       indexedSummary : indexedSummary
     };
   },
+  highlightToggle : function() {
+    var state = this.state;
+    this.mainToggles.selectAll('.toggle')
+      .classed('toggle-highlight', function() {
+        return this.getAttribute('data-state') === state;
+      });
+  },
   renderSummaryLines : function(sessions, years, summaryFunction) {
     var self = this;
     var mainDuration = 250;
@@ -435,6 +442,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     var xStretch = 0.5;
     this._xScale.domain([_.min(yearsRepresented) - xStretch, +_.max(yearsRepresented) + xStretch]);
+
+    var sessionScaleSpread = 200 / yearsRepresented.length;
+    this._sessionScale.range([-sessionScaleSpread, sessionScaleSpread]);
 
     var indexedSummary = {};
     var summary = _.map(yearGroups, function(v, year) {
@@ -580,6 +590,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'one' : {
       _onEnter : function() {
+        this.highlightToggle();
         this.renderRates();
         this.setText('one');
       },
@@ -589,6 +600,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'two' : {
       _onEnter : function() {
+        this.highlightToggle();
         this.renderStandardDot('2012-01-01');
         this.setText('two');
       },
@@ -598,6 +610,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'three' : {
       _onEnter : function() {
+        this.highlightToggle();
         this.renderStandardDot('2012-12-01');
         this.setText('three');
       },
@@ -607,6 +620,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'four' : {
       _onEnter : function() {
+        this.highlightToggle();
         this.renderMultiDot(['2012-12-01']);
         this.setText('four');
       },
@@ -616,6 +630,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'five' : {
       _onEnter : function() {
+        this.highlightToggle();
         this.renderMultiDot(undefined, [2014]);
         this.setText('five');
       },
@@ -625,6 +640,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'six' : {
       _onEnter : function() {
+        this.highlightToggle();
         this.renderMultiDot(undefined, [2015, 2016, 2017]);
         this.setText('six');
       },
@@ -634,6 +650,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'seven' : {
       _onEnter : function() {
+        this.highlightToggle();
         this.renderSummaryLines();
         this.setText('seven');
       },
