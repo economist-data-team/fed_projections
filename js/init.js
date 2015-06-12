@@ -33,7 +33,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
                thought the rate would rise. (The slight drop in predictions in late 2014\
                is because the committee began allowing predictions in quarter point\
                intervals, rather than only half point.)",
-    'six' :   "The story is pretty similar for 2015."
+    'six' :   "The story is pretty similar for 2015 and beyond: while the committee’s\
+               predictions have always clustered towards the bottom of the chart, the high\
+               end continues to fall.",
+    'seven' : "Looking at the average of the committee’s predictions, we can see the trend\
+               even more clearly."
   },
   initialize : function() {
     var self = this;
@@ -339,14 +343,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     var yearGroups = _.groupBy(filtered, 'year');
 
-    // var yearsRepresented = _.filter(_.unique(_.pluck(filtered, 'year')), function(y) {
-    //   return isNumeric(y);
-    // });
-
     var yearsRepresented = _.filter(_.keys(yearGroups), isNumeric);
 
     var xStretch = 0.5;
-    this._xScale.domain([_.min(yearsRepresented) - xStretch - 0.25, _.max(yearsRepresented) + xStretch]);
+    this._xScale.domain([_.min(yearsRepresented) - xStretch, +_.max(yearsRepresented) + xStretch]);
 
     var indexedSummary = {};
     var summary = _.map(yearGroups, function(v, year) {
@@ -512,7 +512,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'four' : {
       _onEnter : function() {
-        this.renderMultiDot(undefined, [2014]);
+        this.renderMultiDot(['2012-12-01']);
         this.setText('four');
       },
       next : function() {
@@ -521,6 +521,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'five' : {
       _onEnter : function() {
+        this.renderMultiDot(undefined, [2014]);
         this.setText('five');
       },
       next : function() {
@@ -529,10 +530,20 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'six' : {
       _onEnter : function() {
+        this.renderMultiDot(undefined, [2015, 2016, 2017]);
         this.setText('six');
       },
       next : function() {
         this.transition('seven');
+      }
+    },
+    'seven' : {
+      _onEnter : function() {
+        this.renderSummaryLines();
+        this.setText('seven');
+      },
+      next : function() {
+        this.transition('eight');
       }
     },
   }
