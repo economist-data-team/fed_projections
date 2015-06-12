@@ -7,6 +7,15 @@ import {
 import colours from 'econ_colours';
 
 
+function dateToDecimalYear(date) {
+  var year = date.getFullYear();
+  var start = new Date(year, 0, 0);
+  var end = new Date(year + 1, 0, 0);
+  var span = end - start;
+  var elapsed = date - start;
+  return year + (elapsed / span);
+}
+
 var mainFSM = window.mainFSM = new machina.Fsm({
   texts : {
     'one'   : "Eight times a year, the Federal Reserve’s Open Market Committee \
@@ -48,25 +57,6 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       title : 'Irrational exuberance',
       subtitle : 'Subtitle'
     }, Header);
-
-    this.toggle = this.interactive.addSection({
-      name : 'toggles',
-      toggles : [
-        {
-          name : 'Dot plot',
-          state : 'standard-dot',
-          click : function() { self.transition('standard-dot'); }
-        }, {
-          name : 'Combined plot',
-          state : 'combined-dot',
-          click : function() { self.transition('multiDot'); }
-        }, {
-          name : 'Means',
-          state : 'means',
-          click : function() { self.transition('means'); }
-        }
-      ]
-    }, ToggleGroup);
 
     this.chart = this.interactive.addSection({
       name : 'main-chart',
@@ -115,6 +105,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       colours.green[0]
     ]);
 
+    var dotDataDfd = $.Deferred();
     d3.csv('./data/dotplot/Sheet1-Reformatted.csv', function(error, data) {
       var parsed = _.map(data, parseNumerics);
       self.data = _.flattenDeep(_.map(parsed, function(d) {
@@ -127,15 +118,34 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           };
         });
       }));
+      // self.transition('one');
+      dotDataDfd.resolve();
+    });
+
+    var rateDataDfd = $.Deferred();
+    d3.csv('./data/fed-funds-rate.csv', function(error, data) {
+      var dateFormat = d3.time.format('%Y-%m-%d');
+      var parsed = _.map(data, function(d) {
+        var ret = parseNumerics(d);
+        var date = ret.date = dateFormat.parse(d.date);
+        ret.year = dateToDecimalYear(date);
+        return ret;
+      });
+      self.rateData = parsed;
+      // console.log(parsed);
+      rateDataDfd.resolve();
+    });
+
+    $.when(dotDataDfd, rateDataDfd).then(function() {
       self.transition('one');
     });
   },
   _setupPlot : function() {
     this._xScale = d3.scale.linear()
-      .domain([2012, 2017])
+      .domain([2006, 2015])
       .range([40, 550]);
     this.yScale = d3.scale.linear()
-      .domain([0,5])
+      .domain([0,6])
       .range([470, 20]);
 
     this.longerRunPoint = 700;
@@ -145,6 +155,62 @@ var mainFSM = window.mainFSM = new machina.Fsm({
   },
   sessionScale : function(v) {
     return this._sessionScale(this.sessions.indexOf(v));
+  },
+  renderRates : function(years) {
+    var self = this;
+    var mainDuration = 250;
+
+    years = years || d3.range(2005, 2016);
+
+
+    var line = d3.svg.line()
+      .interpolate('step-after')
+      .x(function(d) {
+        // -0.5 so the axis marks are at the center of the year
+        return self.xScale(d.year - 0.5);
+      })
+      .y(function(d) {
+        return self.yScale(d.rate);
+      });
+
+
+    var join = this.chart.selectAll('.rate-line')
+      .data([this.rateData]);
+    join.enter().append('svg:path')
+      .classed('rate-line', true)
+      .attr('fill', 'none')
+      .attr('stroke', 'black')
+      .attr('opacity', 0)
+      .attr('d', line);
+    join.exit().remove();
+
+    this._xScale.domain([d3.min(years), d3.max(years)]);
+
+    join.transition().duration(mainDuration)
+      .attr('opacity', 1)
+      .attr('d', line);
+
+    this.renderAxes(years, mainDuration);
+  },
+  removeRateLine : function(mainDuration) {
+    var self = this;
+
+    var line = d3.svg.line()
+      .interpolate('step-after')
+      .x(function(d) {
+        // -0.5 so the axis marks are at the center of the year
+        return self.xScale(d.year - 0.5);
+      })
+      .y(function(d) {
+        return self.yScale(d.rate);
+      });
+
+    var join = this.chart.selectAll('.rate-line')
+      .data([this.rateData]);
+    join.transition().duration(mainDuration)
+      .attr('d', line)
+      .attr('opacity', 0)
+      .remove();
   },
   renderStandardDot : function(dateOfPrediction) {
     var self = this;
@@ -222,6 +288,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         .attr('opacity', 1);
     });
 
+    this.removeRateLine(mainDuration);
     this.renderAxes(yearsRepresented, mainDuration);
   },
   renderMultiDot : function(sessions, years) {
@@ -287,6 +354,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('opacity', 0)
       .remove();
 
+    this.removeRateLine(mainDuration);
     this.renderAxes(yearsRepresented, mainDuration);
   },
   getSummaries : function(summaryFunction) {
@@ -347,6 +415,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     var xStretch = 0.5;
     this._xScale.domain([_.min(yearsRepresented) - xStretch, +_.max(yearsRepresented) + xStretch]);
+
+    console.log(this._xScale.domain());
 
     var indexedSummary = {};
     var summary = _.map(yearGroups, function(v, year) {
@@ -435,6 +505,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('opacity', 0)
       .remove();
 
+    this.removeRateLine(mainDuration);
     this.renderAxes(yearsRepresented, mainDuration);
   },
   renderAxes : function(yearsRepresented, mainDuration) {
@@ -486,6 +557,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'one' : {
       _onEnter : function() {
+        this.renderRates();
         this.setText('one');
       },
       next : function() {
