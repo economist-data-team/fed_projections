@@ -70,4 +70,8 @@ body {
   stroke: black;
   stroke-width: 1; }
 
+#frametext {
+  max-width: 555px;
+  margin: 10px 20px; }
+
 /*# sourceMappingURL=style.css.map */
