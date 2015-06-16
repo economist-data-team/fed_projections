@@ -537,9 +537,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('stroke', 'black')
       .attr('fill', 'none')
       .transition().duration(mainDuration)
-      .attr('opacity', 1)
       .attr('d', intermediateLine)
-      .transition().duration(mainDuration)
+      // .transition().duration(mainDuration)
+      .attr('opacity', 1)
       .attr('d', finalLine);
 
     var summaryDotJoin = this.chart.selectAll('.summary-dot')
@@ -555,14 +555,14 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('r', 2.5)
       .transition().duration(mainDuration)
       .attr('opacity', 1)
-      .attr('cx', function(d) {
-        return self.xScale(d.year, initialXScale) +
-          self.sessionScale(d.dateOfPrediction, initialSessionScale);
-      })
+      // .attr('cx', function(d) {
+      //   return self.xScale(d.year, initialXScale) +
+      //     self.sessionScale(d.dateOfPrediction, initialSessionScale);
+      // })
       .attr('cy', function(d) {
         return self.yScale(d.summaryValue);
       })
-      .transition().duration(mainDuration)
+      // .transition().duration(mainDuration)
       .attr('cx', function(d) {
         return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
       });
@@ -778,7 +778,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     'six' : {
       _onEnter : function() {
         this.highlightToggle();
-        this.renderMultiDot(undefined, [2015, 2016, 2017]);
+        this.renderSummaryLines(undefined, [2014]);
+        // this.renderMultiDot(undefined, [2015, 2016, 2017]);
         this.setText('six');
       },
       next : function() {
