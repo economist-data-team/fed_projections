@@ -81,11 +81,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.legend = this.interactive.addSection({
       name : 'colourLegend',
       grouped : true,
+      margin: [10, 10, 0],
+      title : 'Date of prediction:',
+      indicator : 'circle',
       colours : [
-        // { title : '2012', colour : colours.brown[0] },
-        // { title : '2013', colour : colours.blue[0] },
-        // { title : '2014', colour : colours.red[0] },
-        // { title : '2015', colour : colours.green[0] }
         { title : '2012', colour : [colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3]] },
         { title : '2013', colour : [colours.blue[0], colours.blue[1], colours.blue[4], colours.blue[5]] },
         { title : '2014', colour : [colours.red[0], colours.red[1], colours.red[2], colours.red[3]] },

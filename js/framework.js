@@ -513,6 +513,19 @@ ColourLegend.prototype.updateColours = function(colours) {
   this.render();
 };
 ColourLegend.prototype.render = function() {
+  var leftMargin = this.margin.left;
+
+  var titleJoin = this.selectAll('.legend-title')
+    .data(this.options.title ? [this.options.title] : []);
+  titleJoin.enter().append('svg:text')
+    .classed('legend-title', true);
+  titleJoin.exit().remove();
+  titleJoin.text(function(d) { return d; })
+    .attr('y', 17.5)
+    .attr('x', leftMargin);
+  var titleOffset = titleJoin.node() ?
+    titleJoin.node().getBoundingClientRect().width + 10 : 0;
+
   var groupLengths = null, groupSums = null;
   if(this.options.grouped) {
     groupLengths = _.map(this.colours, function(c) { return c.colour.length; });
@@ -543,7 +556,7 @@ ColourLegend.prototype.render = function() {
     .text(function(d) {
       return d.title;
     })
-    .attr('y', 18);
+    .attr('y', 17.5);
   blockJoin.enter().append('svg:'+ this.options.indicator)
     .classed('legend-block', true)
     // rect attributes
@@ -559,16 +572,20 @@ ColourLegend.prototype.render = function() {
       textWidths[i] = this.getBoundingClientRect().width;
     })
     .attr('x', function(d, i) {
-      return 35 + i * 30 + _.sum(textWidths.slice(0, i)) +
+      return leftMargin + titleOffset +
+        15 + i * 30 + _.sum(textWidths.slice(0, i)) +
         (groupLengths ? groupSums[i] * 10 - 10: i * 10);
     });
   blockJoin
     .attr('x', function(d, i) {
-      return 20 + i * 10 + _.sum(textWidths.slice(0, groupIndex(i))) +
+      return leftMargin + titleOffset +
+        i * 10 + _.sum(textWidths.slice(0, groupIndex(i))) +
         groupIndex(i) * 30;
     })
     .attr('cx', function(d, i) {
-      return 25 + i * 10 + _.sum(textWidths.slice(0, groupIndex(i))) +
+      return leftMargin + titleOffset +
+        // + 5 here because it's center, not left edge
+        5 + i * 10 + _.sum(textWidths.slice(0, groupIndex(i))) +
         groupIndex(i) * 30;
     });
 };
