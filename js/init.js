@@ -382,6 +382,20 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       _.each(initialAttrs, function(fn, attr) { joinEnter.attr(attr, fn); });
 
       join
+        .on('mouseenter', function(d) {
+          self.interactive.showTooltip([
+              'Prediction of ' + self.predictionDateFormatter(d.dateOfPrediction),
+              d.count + ' predictions'
+            ], {
+              x : self.xScale(d.year) + self.sessionScale(d.dateOfPrediction) + self.interactive.margin.left,
+              y : self.yScale(d.predictedRate) + self.interactive.margin.top
+            }, {
+              offset : 10
+            });
+        })
+        .on('mouseleave', function(d) {
+          self.interactive.hideTooltip();
+        })
         .transition().duration(mainDuration)
         .delay(function(d, i) {
           return i * 15 + sessions.indexOf(session) * 60;
