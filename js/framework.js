@@ -851,3 +851,14 @@ ToggleGroup.prototype.updatePositions = function() {
     widthCursor += textWidth + 10;
   });
 };
+
+export function TextSection(parent, options) {
+  this.initialize.apply(this, arguments);
+}
+TextSection.prototype = Object.create(Section.prototype);
+TextSection.prototype.constructor = ToggleGroup;
+TextSection.prototype.render = function() {
+  this.guarantee('.section-text', 'svg:text')
+    .text(this.options.text)
+    .attr('y', 17.5);
+};

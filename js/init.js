@@ -2,7 +2,7 @@
 /* jshint multistr:true */
 import {
   isNumeric, parseNumerics, getTransformString,
-  Interactive, Header, ToggleGroup, ColourLegend
+  Interactive, Header, ToggleGroup, TextSection, ColourLegend
 } from 'framework';
 import colours from 'econ_colours';
 
@@ -48,6 +48,12 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     'seven' : "Looking at the average of the committee’s predictions, we can see the trend\
                even more clearly."
   },
+  predictionDateFormatter : function(date) {
+    var inputDateFormat = d3.time.format('%Y-%m-%d');
+    var outputDateFormat = d3.time.format('%B %Y');
+    var parsedDate = inputDateFormat.parse(date);
+    return outputDateFormat(parsedDate);
+  },
   initialize : function() {
     var self = this;
 
@@ -78,7 +84,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     }, ToggleGroup);
     this.top.recalculateSections();
 
-    this.legend = this.interactive.addSection({
+    this.colourLegendOptions = {
       name : 'colourLegend',
       grouped : true,
       margin: [10, 10, 0],
@@ -90,7 +96,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         { title : '2014', colour : [colours.red[0], colours.red[1], colours.red[2], colours.red[3]] },
         { title : '2015', colour : [colours.green[0]] }
       ]
-    }, ColourLegend);
+    };
+    this.legend = this.interactive.addSection(this.colourLegendOptions, ColourLegend);
 
     this.chart = this.interactive.addSection({
       name : 'main-chart',
@@ -217,6 +224,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       xAxisLabel : 'Year',
       yAxisLabel : 'Federal funds rate'
     });
+    this.legend = this.interactive.replaceSection({
+      text : 'Federal funds rate, 2005–present',
+      margin : [10, 20]
+    }, TextSection, this.legend);
   },
   removeRates : function(mainDuration) {
     var self = this;
@@ -307,6 +318,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       xAxisLabel : 'Prediction target year',
       yAxisLabel : 'Predicted rate'
     });
+    this.legend = this.interactive.replaceSection({
+      text : 'Prediction of ' +
+        this.predictionDateFormatter(dateOfPrediction),
+      margin : [10, 20]
+    }, TextSection, this.legend);
   },
   removeStandardDot : function(mainDuration, options) {
     options = _.extend({}, options);
@@ -401,6 +417,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       xAxisLabel : 'Prediction target year',
       yAxisLabel : 'Predicted rate'
     });
+    this.legend = this.interactive.replaceSection(this.colourLegendOptions, ColourLegend, this.legend);
   },
   removeMultiDot : function(mainDuration, attrFns) {
     attrFns = _.extend({}, attrFns);
@@ -602,6 +619,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       xAxisLabel : 'Predicted year target',
       yAxisLabel : 'Predicted rate'
     });
+    this.legend = this.interactive.replaceSection(this.colourLegendOptions, ColourLegend, this.legend);
   },
   removeSummaryLines : function(mainDuration, options) {
     this.chart.selectAll('.summary-line')
