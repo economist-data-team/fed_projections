@@ -375,7 +375,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
       }
     });
-    this.renderAxes(yearsRepresented, mainDuration);
+    this.renderAxes(yearsRepresented, mainDuration, {
+      bracketAxis : true
+    });
   },
   removeMultiDot : function(mainDuration, attrFns) {
     attrFns = _.extend({}, attrFns);
@@ -567,7 +569,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         return self.yScale(indexedSummary[d.year][d.dateOfPrediction].summaryValue);
       }
     });
-    this.renderAxes(yearsRepresented, mainDuration);
+    this.renderAxes(yearsRepresented, mainDuration, {
+      bracketAxis : true
+    });
   },
   removeSummaryLines : function(mainDuration, options) {
     this.chart.selectAll('.summary-line')
@@ -580,18 +584,20 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .remove();
   },
   renderAxes : function(yearsRepresented, mainDuration, options) {
+    var self = this;
     options = _.extend({}, options);
 
+    // we may have a two-step transition
     var initialXAxis;
     if(options.initialXScale) {
       initialXAxis = d3.svg.axis()
-        .outerTickSize(1)
+        .outerTickSize(options.bracketAxis ? 0 : 1)
         .tickFormat(d3.format('i'))
         .tickValues(yearsRepresented)
         .scale(options.initialXScale);
     }
     var xAxis = d3.svg.axis()
-      .outerTickSize(1)
+      .outerTickSize(options.bracketAxis ? 0 : 1)
       .tickFormat(d3.format('i'))
       .tickValues(yearsRepresented)
       .scale(this._xScale);
@@ -604,6 +610,34 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       xTransition = xTransition.transition().duration(mainDuration);
     }
     xTransition.call(xAxis);
+
+    var bracketJoin = this.chart.selectAll('.bracket')
+      .data(options.bracketAxis ? yearsRepresented : []);
+    bracketJoin.enter().append('svg:path')
+      .classed('bracket', true)
+      .attr('fill', 'none')
+      .attr('stroke', 'black')
+      .attr('transform', function(d) {
+        return getTransformString(self.xScale(d), self.yScale.range()[0]);
+      })
+      .attr('opacity', 0);
+    bracketJoin.exit()
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
+    bracketJoin
+      .transition().duration(mainDuration)
+      .attr('transform', function(d) {
+        return getTransformString(self.xScale(d), self.yScale.range()[0]);
+      })
+      .attr('d', function(d) {
+        var range = self._sessionScale.range();
+        var left = range[0] - 5, right = range[1] + 5;
+        return 'M ' + left + ' -8 L ' +
+          left + ' 0 L ' + right + ' 0 L ' +
+          right + ' -8';
+      })
+      .attr('opacity', 1);
 
     var yAxis = d3.svg.axis()
       .outerTickSize(1)
