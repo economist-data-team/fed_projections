@@ -55,13 +55,13 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.interactive = new Interactive('#interactive');
 
     this.header = this.top.addSection({
-      title : 'Irrational exuberance',
-      subtitle : 'Subtitle'
+      title : 'US Federal Reserve “Dot Plots”',
+      subtitle : 'Federal Reserve Open Market Committee predictions'
     }, Header);
 
     this.mainToggles = this.top.addSection({
       name : 'main-selector',
-      margin : [10, 20, 0],
+      margin : [10, 20],
       height: 24,
       toggles : _.map(_.keys(this.texts), function(k,i) {
         return {
@@ -198,7 +198,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     join.enter().append('svg:path')
       .classed('rate-line', true)
       .attr('fill', 'none')
-      .attr('stroke', 'black')
+      .attr('stroke', colours.aquamarine[0])
+      .attr('stroke-width', 2)
       .attr('opacity', 0)
       .attr('d', line);
     join.exit().remove();
@@ -212,7 +213,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.removeStandardDot(mainDuration);
     this.removeMultiDot(mainDuration);
     this.removeSummaryLines(mainDuration);
-    this.renderAxes(years, mainDuration);
+    this.renderAxes(years, mainDuration, {
+      xAxisLabel : 'Year',
+      yAxisLabel : 'Federal funds rate'
+    });
   },
   removeRates : function(mainDuration) {
     var self = this;
@@ -299,7 +303,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.removeRates(mainDuration);
     this.removeMultiDot(mainDuration);
     this.removeSummaryLines(mainDuration);
-    this.renderAxes(yearsRepresented, mainDuration);
+    this.renderAxes(yearsRepresented, mainDuration, {
+      xAxisLabel : 'Prediction target year',
+      yAxisLabel : 'Predicted rate'
+    });
   },
   removeStandardDot : function(mainDuration, options) {
     options = _.extend({}, options);
@@ -390,7 +397,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       }
     });
     this.renderAxes(yearsRepresented, mainDuration, {
-      bracketAxis : true
+      bracketAxis : true,
+      xAxisLabel : 'Prediction target year',
+      yAxisLabel : 'Predicted rate'
     });
   },
   removeMultiDot : function(mainDuration, attrFns) {
@@ -584,7 +593,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       }
     });
     this.renderAxes(yearsRepresented, mainDuration, {
-      bracketAxis : true
+      bracketAxis : true,
+      xAxisLabel : 'Predicted year target',
+      yAxisLabel : 'Predicted rate'
     });
   },
   removeSummaryLines : function(mainDuration, options) {
@@ -665,6 +676,28 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('transform', getTransformString(this._xScale.range()[0], 0))
       .transition().duration(mainDuration)
       .call(yAxis);
+
+    function scaleMidPoint(scale) {
+      var range = scale.range();
+      return Math.abs(range[1] - range[0]) / 2 + d3.min(range);
+    }
+    this.chart.guarantee('.x-axis-label', 'svg:text')
+      .classed('axis-label', true)
+      .text(options.xAxisLabel)
+      // .transition().duration(mainDuration)
+      .attr('transform',
+        getTransformString(scaleMidPoint(this._xScale), this.yScale.range()[0] + 38)
+      );
+
+    this.chart.guarantee('.y-axis-label', 'svg:text')
+      .classed('axis-label', true)
+      .text(options.yAxisLabel)
+      // .attr('transform', 'rotate(-90)')
+      // .transition().duration(mainDuration)
+      .attr('transform',
+        getTransformString(0, scaleMidPoint(this.yScale)) +
+        'rotate(-90)');
+    this.interactive.recalculateSections();
   },
   setText : function(key) {
     document.getElementById('frametext').innerHTML = this.texts[key];
