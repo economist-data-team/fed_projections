@@ -150,11 +150,13 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     this.longerRunPoint = 700;
   },
-  xScale : function(v) {
-    return v === 'longer_run' ? this.longerRunPoint : this._xScale(v);
+  xScale : function(v, xScale) {
+    xScale = xScale || this._xScale;
+    return v === 'longer_run' ? this.longerRunPoint : xScale(v);
   },
-  sessionScale : function(v) {
-    return this._sessionScale(this.sessions.indexOf(v));
+  sessionScale : function(v, sessionScale) {
+    sessionScale = sessionScale || this._sessionScale;
+    return sessionScale(this.sessions.indexOf(v));
   },
   renderRates : function(years) {
     var self = this;
@@ -287,11 +289,18 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     var transition = this.chart.selectAll('.singlepoint')
       .transition().duration(mainDuration)
       .attr('opacity', 0);
+    var endTransition = transition;
 
     if(options.cx) { transition.attr('cx', options.cx); }
     if(options.cy) { transition.attr('cy', options.cy); }
 
-    transition.remove();
+    if(options.finalCx) {
+      var secondTransition = transition.transition().duration(mainDuration);
+      endTransition = secondTransition;
+      secondTransition.attr('cx', options.finalCx);
+    }
+
+    endTransition.remove();
   },
   renderMultiDot : function(sessions, years, initialAttrs) {
     var self = this;
@@ -441,9 +450,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     var yearsRepresented = _.filter(_.keys(yearGroups), isNumeric);
 
     var xStretch = 0.5;
+    var initialXScale = this._xScale.copy();
     this._xScale.domain([_.min(yearsRepresented) - xStretch, +_.max(yearsRepresented) + xStretch]);
 
     var sessionScaleSpread = 200 / yearsRepresented.length;
+    var initialSessionScale = this._sessionScale.copy();
     this._sessionScale.range([-sessionScaleSpread, sessionScaleSpread]);
 
     var indexedSummary = {};
@@ -468,7 +479,15 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       });
     });
 
-    var line = d3.svg.line()
+    var intermediateLine = d3.svg.line()
+      .x(function(d) {
+        return self.xScale(d.year, initialXScale) +
+          self.sessionScale(d.dateOfPrediction, initialSessionScale);
+      })
+      .y(function(d) {
+        return self.yScale(d.summaryValue);
+      });
+    var finalLine = d3.svg.line()
       .x(function(d) {
         return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
       })
@@ -490,7 +509,9 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('fill', 'none')
       .transition().duration(mainDuration)
       .attr('opacity', 1)
-      .attr('d', line);
+      .attr('d', intermediateLine)
+      .transition().duration(mainDuration)
+      .attr('d', finalLine);
 
     var summaryDotJoin = this.chart.selectAll('.summary-dot')
       .data(_.flatten(summary));
@@ -504,17 +525,26 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     summaryDotJoin
       .attr('r', 2.5)
       .transition().duration(mainDuration)
+      .attr('opacity', 1)
       .attr('cx', function(d) {
-        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+        return self.xScale(d.year, initialXScale) +
+          self.sessionScale(d.dateOfPrediction, initialSessionScale);
       })
       .attr('cy', function(d) {
         return self.yScale(d.summaryValue);
       })
-      .attr('opacity', 1);
+      .transition().duration(mainDuration)
+      .attr('cx', function(d) {
+        return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
+      });
 
     this.removeRates(mainDuration);
     this.removeStandardDot(mainDuration, {
       cx : function(d) {
+        return self.xScale(d.year, initialXScale) +
+          self.sessionScale(d.dateOfPrediction, initialSessionScale);
+      },
+      finalCx : function(d) {
         return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
       },
       cy : function(d) {
@@ -523,6 +553,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     });
     this.removeMultiDot(mainDuration, {
       cx : function(d) {
+        return self.xScale(d.year, initialXScale) +
+          self.sessionScale(d.dateOfPrediction, initialSessionScale);
+      },
+      finalCx : function(d) {
         return self.xScale(d.year) + self.sessionScale(d.dateOfPrediction);
       },
       cy : function(d) {
@@ -541,17 +575,31 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('opacity', 0)
       .remove();
   },
-  renderAxes : function(yearsRepresented, mainDuration) {
+  renderAxes : function(yearsRepresented, mainDuration, options) {
+    options = _.extend({}, options);
+
+    var initialXAxis;
+    if(options.initialXScale) {
+      initialXAxis = d3.svg.axis()
+        .outerTickSize(1)
+        .tickFormat(d3.format('i'))
+        .tickValues(yearsRepresented)
+        .scale(options.initialXScale);
+    }
     var xAxis = d3.svg.axis()
       .outerTickSize(1)
       .tickFormat(d3.format('i'))
       .tickValues(yearsRepresented)
       .scale(this._xScale);
-    this.chart.guarantee('.x-axis', 'svg:g')
+    var xTransition = this.chart.guarantee('.x-axis', 'svg:g')
       .classed('axis x-axis', true)
       .attr('transform', getTransformString(0, this.yScale.range()[0]))
-      .transition().duration(mainDuration)
-      .call(xAxis);
+      .transition().duration(mainDuration);
+    if(options.initialXScale) {
+      xTransition.call(initialXAxis);
+      xTransition = xTransition.transition().duration(mainDuration);
+    }
+    xTransition.call(xAxis);
 
     var yAxis = d3.svg.axis()
       .outerTickSize(1)
