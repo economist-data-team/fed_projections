@@ -19,8 +19,8 @@ function dateToDecimalYear(date) {
 var mainFSM = window.mainFSM = new machina.Fsm({
   texts : {
     'one'   : "Eight times a year, the Federal Reserve’s Open Market Committee \
-               meets to consider its policy and amend the federal funds rate—\
-               the interest rate at which the Federal Reserve lends money to other\
+               meets to consider its policy and amend the federal funds rate—the\
+               interest rate at which the Federal Reserve lends money to other\
                banks. In December of 2008, they lowered the federal funds rate to\
                0.25. They have not changed it since.",
     'two'   : "Since 2012, about four times a year the committee’s members make\
@@ -552,7 +552,12 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .classed('summary-dot', true)
       .attr('opacity', 0);
     summaryDotJoin
-      .attr('r', 2.5)
+      .attr('r', 3)
+      .attr('fill', function(d) {
+        return self.sessionColours[d.dateOfPrediction];
+      })
+      // calling .order() makes sure the dots render over the lines
+      .order()
       .transition().duration(mainDuration)
       .attr('opacity', 1)
       // .attr('cx', function(d) {
