@@ -2,7 +2,7 @@
 /* jshint multistr:true */
 import {
   isNumeric, parseNumerics, getTransformString,
-  Interactive, Header, ToggleGroup
+  Interactive, Header, ToggleGroup, ColourLegend
 } from 'framework';
 import colours from 'econ_colours';
 
@@ -78,6 +78,21 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     }, ToggleGroup);
     this.top.recalculateSections();
 
+    this.legend = this.interactive.addSection({
+      name : 'colourLegend',
+      grouped : true,
+      colours : [
+        // { title : '2012', colour : colours.brown[0] },
+        // { title : '2013', colour : colours.blue[0] },
+        // { title : '2014', colour : colours.red[0] },
+        // { title : '2015', colour : colours.green[0] }
+        { title : '2012', colour : [colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3]] },
+        { title : '2013', colour : [colours.blue[0], colours.blue[1], colours.blue[4], colours.blue[5]] },
+        { title : '2014', colour : [colours.red[0], colours.red[1], colours.red[2], colours.red[3]] },
+        { title : '2015', colour : [colours.green[0]] }
+      ]
+    }, ColourLegend);
+
     this.chart = this.interactive.addSection({
       name : 'main-chart',
       margin : [0, 20],
@@ -104,8 +119,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     this.sessionColours = _.zipObject(sessions, [
       colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3],
-      colours.blue[0], colours.blue[1], colours.blue[2], colours.blue[3],
-      colours.red[0], colours.red[1], colours.red[2], colours.blue[3],
+      colours.blue[0], colours.blue[1], colours.blue[4], colours.blue[5],
+      colours.red[0], colours.red[1], colours.red[2], colours.red[3],
       colours.green[0]
     ]);
 

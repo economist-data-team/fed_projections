@@ -513,7 +513,25 @@ ColourLegend.prototype.updateColours = function(colours) {
   this.render();
 };
 ColourLegend.prototype.render = function() {
-  var blockJoin = this.selectAll('.legend-block').data(this.colours);
+  var groupLengths = null, groupSums = null;
+  if(this.options.grouped) {
+    groupLengths = _.map(this.colours, function(c) { return c.colour.length; });
+    groupSums = _.times(groupLengths.length, function(n) {
+      return _.sum(groupLengths.slice(0, n+1));
+    });
+  }
+  function groupIndex(idx) {
+    if(!groupLengths) { return idx; }
+    for(var i=0,l=groupSums.length;i<l;++i) {
+      if(idx < groupSums[i]) {
+        return i;
+      }
+    }
+  }
+  var blockJoin = this.selectAll('.legend-block')
+    .data(this.options.grouped ? _.map(
+      _.flatten(_.pluck(this.colours, 'colour')),
+      function(d) { return { colour : d }; }) : this.colours);
   var textJoin = this.selectAll('.legend-label').data(this.colours);
 
   var line = 0;
@@ -541,14 +559,17 @@ ColourLegend.prototype.render = function() {
       textWidths[i] = this.getBoundingClientRect().width;
     })
     .attr('x', function(d, i) {
-      return 35 + i * 30 + _.sum(textWidths.slice(0, i));
+      return 35 + i * 30 + _.sum(textWidths.slice(0, i)) +
+        (groupLengths ? groupSums[i] * 10 - 10: i * 10);
     });
   blockJoin
     .attr('x', function(d, i) {
-      return 20 + i * 30 + _.sum(textWidths.slice(0, i));
+      return 20 + i * 10 + _.sum(textWidths.slice(0, groupIndex(i))) +
+        groupIndex(i) * 30;
     })
     .attr('cx', function(d, i) {
-      return 25 + i * 30 + _.sum(textWidths.slice(0, i));
+      return 25 + i * 10 + _.sum(textWidths.slice(0, groupIndex(i))) +
+        groupIndex(i) * 30;
     });
 };
 
