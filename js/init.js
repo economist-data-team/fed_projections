@@ -647,10 +647,13 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       })
       .attr('d', function(d) {
         var range = self._sessionScale.range();
-        var left = range[0] - 5, right = range[1] + 5;
-        return 'M ' + left + ' -8 L ' +
-          left + ' 0 L ' + right + ' 0 L ' +
-          right + ' -8';
+        var domain = self._sessionScale.domain();
+        // this is half the width of one session column
+        var halfSpread = range[1] / (domain[1] - domain[0]);
+        var left = range[0] - halfSpread, right = range[1] + halfSpread;
+        return 'M ' + left + ' -4 L ' +
+          left + ' 4 L ' + right + ' 4 L ' +
+          right + ' -4';
       })
       .attr('opacity', 1);
 
