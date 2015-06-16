@@ -1,4 +1,8 @@
 #frametext {
   max-width: 555px;
-  margin: 10px 20px;
+  padding: 10px 20px;
+  min-height: 6em;
+  font-size: 15px;
+  line-height: 1.25;
+  background-color: nth($grey, 9);
 }
