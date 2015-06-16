@@ -51,21 +51,18 @@ var mainFSM = window.mainFSM = new machina.Fsm({
   initialize : function() {
     var self = this;
 
+    this.top = new Interactive('#header');
     this.interactive = new Interactive('#interactive');
 
-    this.header = this.interactive.addSection({
+    this.header = this.top.addSection({
       title : 'Irrational exuberance',
       subtitle : 'Subtitle'
     }, Header);
 
-    this.chart = this.interactive.addSection({
-      name : 'main-chart',
-      margin : [20],
-      height: 520
-    });
-
-    this.mainToggles = this.interactive.addSection({
+    this.mainToggles = this.top.addSection({
       name : 'main-selector',
+      margin : [10, 20, 0],
+      height: 24,
       toggles : _.map(_.keys(this.texts), function(k,i) {
         return {
           name : 1 + i,
@@ -79,6 +76,13 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         }
       ]),
     }, ToggleGroup);
+    this.top.recalculateSections();
+
+    this.chart = this.interactive.addSection({
+      name : 'main-chart',
+      margin : [0, 20],
+      height: 500
+    });
 
     this._setupPlot();
 
@@ -638,6 +642,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     },
     'one' : {
       _onEnter : function() {
+        this.interactive.recalculateSections();
         this.highlightToggle();
         this.renderRates();
         this.setText('one');

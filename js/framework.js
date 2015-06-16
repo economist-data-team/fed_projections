@@ -249,12 +249,13 @@ Interactive.prototype.replaceSection = function(options, Constructor, target) {
 };
 Interactive.prototype.recalculateSections = function() {
   var heightTally = 0;
+  var offset = this.container.node().getBoundingClientRect().top;
   _.each(this.sections, function(section) {
     var sectionHeight = section.getHeight();
     section.attr('transform', getTransformString(0, heightTally));
     // we have to recalculate getBoundingClientRect now because we've
     // moved the rect
-    heightTally = section.getBoundingClientRect().top + sectionHeight;
+    heightTally = section.getBoundingClientRect().top + sectionHeight - offset;
   });
   this.container.attr('height', Math.ceil(heightTally));
   _.each(this.sections, function(section) {
