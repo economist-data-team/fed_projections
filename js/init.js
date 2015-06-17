@@ -22,17 +22,17 @@ var mainFSM = window.mainFSM = new machina.Fsm({
                meets to consider its policy and amend the federal funds rate—the\
                interest rate at which the Federal Reserve lends money to other\
                banks. In December of 2008, they lowered the federal funds rate to\
-               0.25. They have not changed it since.",
+               0.25%. They have not changed it since.",
     'two'   : "Since 2012, about four times a year the committee’s members make\
                predictions about where the federal funds rate will be at the end\
                of the next several years. These predictions are released in the form\
-               of ‘dot plots’ like the one above. Each dot represents one member's\
+               of “dot plots” like the one above. Each dot represents one member's\
                prediction for the end of each year. This prediction was made in January 2012.",
     'three' : "The committee members are often quite bullish on the federal funds rate. \
                At the beginning of 2012, five (of 17) committee members expected the rate to be\
                two percent or more by the end of 2014; even as late as December 2012 (above),\
                one member still expected that. At the end of 2014, however, it remained\
-               at 0.25.",
+               at 0.25%.",
     'four' :  "Let’s take a broader look at the Fed committee’s predictions. Instead\
                of showing a separate dot for each member of the committee, we’ll just\
                use larger dots for rates favoured by more members.",
@@ -796,6 +796,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       _onEnter : function() {
         this.highlightToggle();
         this.renderMultiDot(['2012-12-01']);
+        this.legend = this.interactive.replaceSection({
+          text : 'Prediction of ' + this.predictionDateFormatter('2012-12-01'),
+          margin : [10, 20]
+        }, TextSection, this.legend);
         this.setText('four');
       },
       next : function() {
