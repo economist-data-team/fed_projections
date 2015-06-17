@@ -862,5 +862,6 @@ TextSection.prototype.constructor = ToggleGroup;
 TextSection.prototype.render = function() {
   this.guarantee('.section-text', 'svg:text')
     .text(this.options.text)
-    .attr('y', 17.5);
+    .attr('y', 17.5)
+    .attr(this.options.attrs);
 };

@@ -20,22 +20,25 @@ var mainFSM = window.mainFSM = new machina.Fsm({
   texts : {
     'one'   : "Eight times a year, the Federal Reserve’s Open Market\
                Committee (FOMC) meets to consider its policy and amend\
-               the federal-funds rate—the interest rate at which\
-               America’s central bank lends money to other banks. In\
-               December 2008, they lowered the federal-funds rate to\
-               0.25%. They have not changed it since.",
+               the federal-funds rate—an interest rate which it\
+               adjusts to influence banks' appetite for lending. The\
+               FOMC pushes the rate up to slow down a fast-growing\
+               economy and lets the rate fall to perk up a slumping\
+               economy. In December 2008, they lowered the\
+               federal-funds rate to 0.25%. They have not changed it\
+               since.",
     'two'   : "Since 2012, about four times a year the FOMC’s members\
                make predictions about where the federal-funds rate\
                will be at the end of the next several years. These\
                predictions are released in the form of “dot-plots”\
-               like the one above. Each dot represents one member’s\
+               like the one below. Each dot represents one member’s\
                prediction for the end of each year. These dots were\
                plotted in January 2012.",
     'three' : "Some FOMC members are hawkish on their predictions for\
                the federal-funds rate. At the beginning of 2012, five\
                (of 17) committee members expected the rate to be 2% or\
                more by the end of 2014; even as late as December 2012\
-               (above), one member still expected that. By the end of\
+               (below), one member still expected that. By the end of\
                2014, though, it was still stuck at 0.25%.",
     'four' :  "Let’s take a broader look at the FOMC’s predictions.\
                Instead of showing a separate dot for each member of\
@@ -48,16 +51,16 @@ var mainFSM = window.mainFSM = new machina.Fsm({
                time wore on, optimism faded. By September 2014, only\
                one still thought the rate would rise. (The slight drop\
                in predictions in late 2014 is because the FOMC began\
-               to make predictions in quarter-point intervals, rather\
-               than only half-point ones.)",
-    'six' :   "Here's another way of looking at the predictions for\
+               to make predictions in intervals of an eighth of a\
+               point, rather than only quarter-point ones.)",
+    'six' :   "Here’s another way of looking at the predictions for\
                2014. The average of predictions for the federal-funds\
                rate in 2014 falls steadily from the meetings in 2012\
                to the meetings in 2014.",
-    'seven' : "Looking at the average of the FOMC's predictions from\
+    'seven' : "Looking at the average of the FOMC’s predictions from\
                all the meetings thus far, we can see the trend even\
                more clearly: the FOMC is perennially over-optimistic\
-               in predicting the federal-funds rate it sets."
+               in predicting how it will set the federal-funds rate."
   },
   predictionDateFormatter : function(date) {
     var inputDateFormat = d3.time.format('%Y-%m-%d');
@@ -72,7 +75,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.interactive = new Interactive('#interactive');
 
     this.header = this.top.addSection({
-      title : 'US Federal Reserve “Dot Plots”',
+      title : 'US Federal Reserve “dot-plots”',
       subtitle : 'Federal Reserve Open Market Committee predictions',
       toggles : _.map(_.keys(this.texts), function(k,i) {
         return {
@@ -111,7 +114,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       name : 'colourLegend',
       grouped : true,
       margin: [10, 10, 0],
-      title : 'Date of prediction:',
+      title : 'Date of prediction, by quarter:',
       indicator : 'circle',
       colours : [
         { title : '2012', colour : [colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3]] },
@@ -248,8 +251,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       yAxisLabel : 'Federal funds rate'
     });
     this.legend = this.interactive.replaceSection({
+      name : 'textLabel',
       text : 'Federal funds rate, 2005–present',
-      margin : [10, 20]
+      margin : [10, 20],
+      attrs : {'font-weight' : 'bold'}
     }, TextSection, this.legend);
     this.interactive.hideTooltip();
   },
@@ -340,12 +345,13 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.removeSummaryLines(mainDuration);
     this.renderAxes(yearsRepresented, mainDuration, {
       xAxisLabel : 'Prediction target year',
-      yAxisLabel : 'Predicted rate'
+      yAxisLabel : 'Predicted rate, %'
     });
     this.legend = this.interactive.replaceSection({
       text : 'Prediction of ' +
         this.predictionDateFormatter(dateOfPrediction),
-      margin : [10, 20]
+      margin : [10, 20],
+      attrs : {'font-weight' : 'bold', 'font-style' : 'italic'}
     }, TextSection, this.legend);
     this.interactive.hideTooltip();
   },
@@ -425,7 +431,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       .attr('opacity', 1);
     this.chart.guarantee('.circle-scale-label', 'svg:text')
       .classed('circle-scale', true)
-      .text('Members predicting')
+      .text('Number of members predicting')
       .attr({
         x : 480,
         y : circScaleOffset - circScaleN[0] + 9,
@@ -455,7 +461,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         .on('mouseenter', function(d) {
           self.interactive.showTooltip([
               'Prediction of ' + self.predictionDateFormatter(d.dateOfPrediction),
-              d.count + ' predictions'
+              d.count + ' members predicting'
             ], {
               x : self.xScale(d.year) + self.sessionScale(d.dateOfPrediction) + self.interactive.margin.left,
               y : self.yScale(d.predictedRate)
@@ -499,7 +505,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.renderAxes(yearsRepresented, mainDuration, {
       bracketAxis : true,
       xAxisLabel : 'Prediction target year',
-      yAxisLabel : 'Predicted rate'
+      yAxisLabel : 'Predicted rate, %'
     });
     this.legend = this.interactive.replaceSection(this.colourLegendOptions, ColourLegend, this.legend);
     this.interactive.hideTooltip();
@@ -707,7 +713,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.renderAxes(yearsRepresented, mainDuration, {
       bracketAxis : true,
       xAxisLabel : 'Predicted year target',
-      yAxisLabel : 'Predicted rate'
+      yAxisLabel : 'Predicted rate, %'
     });
     this.legend = this.interactive.replaceSection(this.colourLegendOptions, ColourLegend, this.legend);
     this.interactive.hideTooltip();
@@ -875,7 +881,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         this.renderMultiDot(['2012-12-01']);
         this.legend = this.interactive.replaceSection({
           text : 'Prediction of ' + this.predictionDateFormatter('2012-12-01'),
-          margin : [10, 20]
+          margin : [10, 20],
+          attrs : {'font-weight' : 'bold', 'font-style' : 'italic'}
         }, TextSection, this.legend);
         this.setText('four');
       },
@@ -887,6 +894,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       _onEnter : function() {
         this.highlightToggle();
         this.renderMultiDot(undefined, [2014]);
+        this.legend.updateColours(this.colourLegendOptions.colours.slice(0,3));
         this.setText('five');
       },
       next : function() {
@@ -898,6 +906,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         this.highlightToggle();
         this.renderSummaryLines(undefined, [2014]);
         // this.renderMultiDot(undefined, [2015, 2016, 2017]);
+        this.legend.updateColours(this.colourLegendOptions.colours.slice(0,3));
         this.setText('six');
       },
       next : function() {

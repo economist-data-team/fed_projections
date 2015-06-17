@@ -5,12 +5,26 @@
   font-size: 15px;
   line-height: 1.25;
   background-color: nth($grey, 9);
+  margin-top: 5px;
 }
 
 .axis-label {
   text-anchor: middle;
 }
 
-.tooltip-text:nth-of-type(2) {
+.tooltip-text:nth-of-type(1) {
   font-style: italic;
+}
+
+.axis-label {
+  font-style: normal;
+}
+
+#colourLegendContainer {
+  font-style: italic;
+}
+
+[font-weight=bold], #colourLegendContainer .legend-title {
+  font-weight: normal;
+  font-family: $font-bold-stack;
 }
