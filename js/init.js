@@ -918,9 +918,38 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         this.highlightToggle();
         this.renderSummaryLines();
         this.setText('seven');
+        this.chart.guarantee('.actual-line-line', 'svg:line')
+          .classed('actual-line', true)
+          .attr({
+            x1 : this._xScale.range()[0],
+            x2 : this.xScale(2015.1),
+            y1 : this.yScale(0.25),
+            y2 : this.yScale(0.25),
+            stroke : colours.grey[6],
+            opacity : 0
+          })
+          .transition().duration(250)
+          .attr('opacity', 1);
+        this.chart.guarantee('.actual-line-text', 'svg:text')
+          .classed('actual-line', true)
+          .text('Actual federal-funds rate: 0.25%')
+          .attr({
+            x : this.xScale(2015.1) + 4,
+            y : this.yScale(0.25) + 5,
+            fill : colours.grey[6],
+            opacity : 0
+          })
+          .transition().duration(250)
+          .attr('opacity', 1);
       },
       next : function() {
         this.transition('eight');
+      },
+      _onExit : function() {
+        this.chart.selectAll('.actual-line')
+          .transition().duration(250)
+          .attr('opacity', 0)
+          .remove();
       }
     },
   }
