@@ -18,35 +18,46 @@ function dateToDecimalYear(date) {
 
 var mainFSM = window.mainFSM = new machina.Fsm({
   texts : {
-    'one'   : "Eight times a year, the Federal Reserve’s Open Market Committee \
-               meets to consider its policy and amend the federal funds rate—the\
-               interest rate at which the Federal Reserve lends money to other\
-               banks. In December of 2008, they lowered the federal funds rate to\
+    'one'   : "Eight times a year, the Federal Reserve’s Open Market\
+               Committee (FOMC) meets to consider its policy and amend\
+               the federal-funds rate—the interest rate at which\
+               America’s central bank lends money to other banks. In\
+               December 2008, they lowered the federal-funds rate to\
                0.25%. They have not changed it since.",
-    'two'   : "Since 2012, about four times a year the committee’s members make\
-               predictions about where the federal funds rate will be at the end\
-               of the next several years. These predictions are released in the form\
-               of “dot plots” like the one above. Each dot represents one member's\
-               prediction for the end of each year. This prediction was made in January 2012.",
-    'three' : "The committee members are often quite bullish on the federal funds rate. \
-               At the beginning of 2012, five (of 17) committee members expected the rate to be\
-               two percent or more by the end of 2014; even as late as December 2012 (above),\
-               one member still expected that. At the end of 2014, however, it remained\
-               at 0.25%.",
-    'four' :  "Let’s take a broader look at the Fed committee’s predictions. Instead\
-               of showing a separate dot for each member of the committee, we’ll just\
-               use larger dots for rates favoured by more members.",
-    'five' :  "Here are all of the committee’s predictions for 2014. In 2012, most\
-               members thought they would raise the rate by the end of 2014, but as\
-               time wore on, their optimism faded. By September 2014, only one still\
-               thought the rate would rise. (The slight drop in predictions in late 2014\
-               is because the committee began allowing predictions in quarter point\
-               intervals, rather than only half point.)",
-    'six' :   "The story is pretty similar for 2015 and beyond: while the committee’s\
-               predictions have always clustered towards the bottom of the chart, the high\
-               end continues to fall.",
-    'seven' : "Looking at the average of the committee’s predictions, we can see the trend\
-               even more clearly."
+    'two'   : "Since 2012, about four times a year the FOMC’s members\
+               make predictions about where the federal-funds rate\
+               will be at the end of the next several years. These\
+               predictions are released in the form of “dot-plots”\
+               like the one above. Each dot represents one member’s\
+               prediction for the end of each year. These dots were\
+               plotted in January 2012.",
+    'three' : "Some FOMC members are hawkish on their predictions for\
+               the federal-funds rate. At the beginning of 2012, five\
+               (of 17) committee members expected the rate to be 2% or\
+               more by the end of 2014; even as late as December 2012\
+               (above), one member still expected that. By the end of\
+               2014, though, it was still stuck at 0.25%.",
+    'four' :  "Let’s take a broader look at the FOMC’s predictions.\
+               Instead of showing a separate dot for each member of\
+               the committee, we’ll use larger dots for rates favoured\
+               by more members.",
+    'five' :  "Here are all the FOMC’s predictions for 2014 (from\
+               different meetings in different years). When making\
+               predictions in early 2012, most members thought they\
+               would have raised the rate by the end of 2014, but as\
+               time wore on, optimism faded. By September 2014, only\
+               one still thought the rate would rise. (The slight drop\
+               in predictions in late 2014 is because the FOMC began\
+               to make predictions in quarter-point intervals, rather\
+               than only half-point ones.)",
+    'six' :   "Here's another way of looking at the predictions for\
+               2014. The average of predictions for the federal-funds\
+               rate in 2014 falls steadily from the meetings in 2012\
+               to the meetings in 2014.",
+    'seven' : "Looking at the average of the FOMC's predictions from\
+               all the meetings thus far, we can see the trend even\
+               more clearly: the FOMC is perennially over-optimistic\
+               in predicting the federal-funds rate it sets."
   },
   predictionDateFormatter : function(date) {
     var inputDateFormat = d3.time.format('%Y-%m-%d');
@@ -62,13 +73,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     this.header = this.top.addSection({
       title : 'US Federal Reserve “Dot Plots”',
-      subtitle : 'Federal Reserve Open Market Committee predictions'
-    }, Header);
-
-    this.mainToggles = this.top.addSection({
-      name : 'main-selector',
-      margin : [10, 20],
-      height: 28,
+      subtitle : 'Federal Reserve Open Market Committee predictions',
       toggles : _.map(_.keys(this.texts), function(k,i) {
         return {
           name : 1 + i,
@@ -80,8 +85,26 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           name : 'Next',
           click : function() { self.handle('next'); }
         }
-      ]),
-    }, ToggleGroup);
+      ])
+    }, Header);
+
+    // this.mainToggles = this.top.addSection({
+    //   name : 'main-selector',
+    //   margin : [10, 20],
+    //   height: 28,
+    //   toggles : _.map(_.keys(this.texts), function(k,i) {
+    //     return {
+    //       name : 1 + i,
+    //       state : k,
+    //       click : function() { self.transition(k); }
+    //     };
+    //   }).concat([
+    //     {
+    //       name : 'Next',
+    //       click : function() { self.handle('next'); }
+    //     }
+    //   ]),
+    // }, ToggleGroup);
     this.top.recalculateSections();
 
     this.colourLegendOptions = {
@@ -540,7 +563,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
   },
   highlightToggle : function() {
     var state = this.state;
-    this.mainToggles.selectAll('.toggle')
+    this.header.selectAll('.toggle')
       .classed('toggle-highlight', function() {
         return this.getAttribute('data-state') === state;
       });
