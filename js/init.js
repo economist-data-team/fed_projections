@@ -121,7 +121,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
 
     this.sizeScale = d3.scale.linear()
       .domain([1,20])
-      .range([2, 12]);
+      .range([2, 15]);
 
     this.sessionColours = _.zipObject(sessions, [
       colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3],
@@ -366,6 +366,51 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     var sessionScaleSpread = 200 / yearsRepresented.length;
     this._sessionScale.range([-sessionScaleSpread, sessionScaleSpread]);
 
+    // setup a circle scale
+    var circScaleN = [20, 10, 1];
+    var circScaleOffset = 60;
+    var circScaleJoin = this.chart.selectAll('.circle-scale-mark')
+      .data(circScaleN);
+    circScaleJoin.enter().append('svg:circle')
+      .attr('opacity', 0)
+      .classed('circle-scale circle-scale-mark', true);
+    circScaleJoin.exit().remove();
+    circScaleJoin
+      .attr('fill', 'none')
+      .attr('stroke', colours.grey[6])
+      .attr('r', function(d) { return self.sizeScale(d); })
+      .attr('cx', 500)
+      .attr('cy', function(d) { return circScaleOffset - self.sizeScale(d); })
+      .transition().duration(mainDuration)
+      .attr('opacity', 1);
+    var circScaleTextJoin = this.chart.selectAll('.circle-scale-text')
+      .data(circScaleN);
+    circScaleTextJoin.enter().append('svg:text')
+      .attr('opacity', 0)
+      .classed('circle-scale circle-scale-text', true);
+    circScaleTextJoin.exit().remove();
+    circScaleTextJoin
+      .text(function(d) { return d; })
+      .attr({
+        fill : colours.grey[4],
+        'text-anchor' : 'middle',
+        x : 500,
+        y : function(d) { return circScaleOffset - self.sizeScale(d) * 2 - 1; },
+        'font-size' : 11
+      })
+      .transition().duration(mainDuration)
+      .attr('opacity', 1);
+    this.chart.guarantee('.circle-scale-label', 'svg:text')
+      .classed('circle-scale', true)
+      .text('Members predicting')
+      .attr({
+        x : 480,
+        y : circScaleOffset - circScaleN[0] + 9,
+        fill : colours.grey[4],
+        'font-style' : 'italic',
+        'text-anchor' : 'end'
+      });
+
     _.each(this.sessions, function(session) {
       var data = _.sortBy(
         _.filter(filtered, function(d) {
@@ -448,6 +493,11 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     });
 
     transition.remove();
+
+    this.chart.selectAll('.circle-scale')
+      .transition().duration(mainDuration)
+      .attr('opacity', 0)
+      .remove();
   },
   getSummaries : function(summaryFunction) {
     var self = this;
