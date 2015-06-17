@@ -800,14 +800,15 @@ ToggleGroup.prototype.render = function() {
     .classed('toggle', true);
   toggleEnter.append('svg:rect')
     .classed('toggle-bg', true)
-    .attr({ height : 23 });
+    .attr({ height : 27 });
   toggleEnter.append('svg:text')
     .classed('toggle-name', true)
-    .attr({x : 5, y : 16});
+    .attr({x : 10, y : 19});
 
   toggleJoin.each(function(d) {
     var g = d3.select(this);
     g.select('.toggle-name')
+      .attr('font-size', 15)
       .text(d.name);
     for(var k in d) { if(d.hasOwnProperty(k) && _.isString(d[k])) {
       this.setAttribute('data-'+k, d[k]);
@@ -844,11 +845,11 @@ ToggleGroup.prototype.updatePositions = function() {
     var name = toggle.select('.toggle-name');
     var bg = toggle.select('.toggle-bg');
     var textWidth = name.node().getBoundingClientRect().width;
-    bg.attr('width', textWidth + 10);
+    bg.attr('width', textWidth + 20);
 
     toggle.attr('transform', getTransformString(widthCursor, 0));
 
-    widthCursor += textWidth + 10;
+    widthCursor += textWidth + 20;
   });
 };
 

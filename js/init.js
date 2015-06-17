@@ -68,7 +68,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
     this.mainToggles = this.top.addSection({
       name : 'main-selector',
       margin : [10, 20],
-      height: 24,
+      height: 28,
       toggles : _.map(_.keys(this.texts), function(k,i) {
         return {
           name : 1 + i,
