@@ -25,7 +25,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
                FOMC pushes the rate up to slow down a fast-growing\
                economy and lets the rate fall to perk up a slumping\
                economy. In December 2008, they lowered the\
-               federal-funds rate to 0.25%. They have not changed it\
+               federal-funds rate between 0% and 0.25%. They have not changed it\
                since.",
     'two'   : "Since 2012, about four times a year the FOMC’s members\
                make predictions about where the federal-funds rate\
@@ -850,9 +850,25 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         this.highlightToggle();
         this.renderRates();
         this.setText('one');
+        this.chart.guarantee('.note-asterisk', 'svg:text')
+          .text('*')
+          .attr({
+            x : this._xScale(2014.8),
+            y: this.yScale(0.125) + 5,
+            fill : colours.grey[4],
+            opacity : 0
+          })
+          .transition().duration(250)
+          .attr('opacity', 1);
       },
       next : function() {
         this.transition('two');
+      },
+      _onExit : function() {
+        this.chart.selectAll('.note-asterisk')
+          .transition().duration(250)
+          .attr('opacity', 0)
+          .remove();
       }
     },
     'two' : {
@@ -923,8 +939,8 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           .attr({
             x1 : this._xScale.range()[0],
             x2 : this.xScale(2015.1),
-            y1 : this.yScale(0.25),
-            y2 : this.yScale(0.25),
+            y1 : this.yScale(0.125),
+            y2 : this.yScale(0.125),
             stroke : colours.grey[6],
             opacity : 0
           })
@@ -932,10 +948,10 @@ var mainFSM = window.mainFSM = new machina.Fsm({
           .attr('opacity', 1);
         this.chart.guarantee('.actual-line-text', 'svg:text')
           .classed('actual-line', true)
-          .text('Actual federal-funds rate: 0.25%')
+          .text('Actual federal-funds rate*')
           .attr({
             x : this.xScale(2015.1) + 4,
-            y : this.yScale(0.25) + 5,
+            y : this.yScale(0.125) + 3,
             fill : colours.grey[6],
             opacity : 0
           })
