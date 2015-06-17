@@ -228,6 +228,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       text : 'Federal funds rate, 2005–present',
       margin : [10, 20]
     }, TextSection, this.legend);
+    this.interactive.hideTooltip();
   },
   removeRates : function(mainDuration) {
     var self = this;
@@ -323,6 +324,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         this.predictionDateFormatter(dateOfPrediction),
       margin : [10, 20]
     }, TextSection, this.legend);
+    this.interactive.hideTooltip();
   },
   removeStandardDot : function(mainDuration, options) {
     options = _.extend({}, options);
@@ -388,7 +390,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
               d.count + ' predictions'
             ], {
               x : self.xScale(d.year) + self.sessionScale(d.dateOfPrediction) + self.interactive.margin.left,
-              y : self.yScale(d.predictedRate) + self.interactive.margin.top
+              y : self.yScale(d.predictedRate)
             }, {
               offset : 10
             });
@@ -432,6 +434,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       yAxisLabel : 'Predicted rate'
     });
     this.legend = this.interactive.replaceSection(this.colourLegendOptions, ColourLegend, this.legend);
+    this.interactive.hideTooltip();
   },
   removeMultiDot : function(mainDuration, attrFns) {
     attrFns = _.extend({}, attrFns);
@@ -634,6 +637,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       yAxisLabel : 'Predicted rate'
     });
     this.legend = this.interactive.replaceSection(this.colourLegendOptions, ColourLegend, this.legend);
+    this.interactive.hideTooltip();
   },
   removeSummaryLines : function(mainDuration, options) {
     this.chart.selectAll('.summary-line')
