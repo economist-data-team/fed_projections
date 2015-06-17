@@ -120,7 +120,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
         { title : '2012', colour : [colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3]] },
         { title : '2013', colour : [colours.blue[0], colours.blue[1], colours.blue[4], colours.blue[5]] },
         { title : '2014', colour : [colours.red[0], colours.red[1], colours.red[2], colours.red[3]] },
-        { title : '2015', colour : [colours.green[0]] }
+        { title : '2015', colour : [colours.green[0], colours.green[1]] }
       ]
     };
     this.legend = this.interactive.addSection(this.colourLegendOptions, ColourLegend);
@@ -138,7 +138,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       '2012-01-01', '2012-04-01', '2012-09-01', '2012-12-01',
       '2013-03-01', '2013-06-01', '2013-09-01', '2013-12-01',
       '2014-03-01', '2014-06-01', '2014-09-01', '2014-12-01',
-      '2015-03-01'
+      '2015-03-01', '2015-06-01'
     ];
 
     this._sessionScale = d3.scale.linear()
@@ -153,7 +153,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3],
       colours.blue[0], colours.blue[1], colours.blue[4], colours.blue[5],
       colours.red[0], colours.red[1], colours.red[2], colours.red[3],
-      colours.green[0]
+      colours.green[0], colours.green[1]
     ]);
 
     var dotDataDfd = $.Deferred();
