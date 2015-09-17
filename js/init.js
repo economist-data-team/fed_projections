@@ -153,7 +153,7 @@ var mainFSM = window.mainFSM = new machina.Fsm({
       colours.brown[0], colours.brown[1], colours.brown[2], colours.brown[3],
       colours.blue[0], colours.blue[1], colours.blue[4], colours.blue[5],
       colours.red[0], colours.red[1], colours.red[2], colours.red[3],
-      colours.green[0], colours.green[1]
+      colours.green[0], colours.green[1], colours.green[2]
     ]);
 
     var dotDataDfd = $.Deferred();
