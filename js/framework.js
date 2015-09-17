@@ -393,7 +393,7 @@ Header.prototype.addToggles = function(toggles) {
     .attr({ height : 27, y : -4 });
   toggleEnter.append('svg:text')
     .classed('toggle-name', true)
-    .attr({x : 10, y : 15});
+    .attr({x : 8, y : 15});
 
   toggleJoin.each(function(d) {
     var g = d3.select(this);
@@ -437,11 +437,11 @@ Header.prototype.updatePositions = function() {
     var name = toggle.select('.toggle-name');
     var bg = toggle.select('.toggle-bg');
     var textWidth = name.node().getBoundingClientRect().width;
-    bg.attr('width', textWidth + 20);
+    bg.attr('width', textWidth + 16);
 
     toggle.attr('transform', getTransformString(widthCursor, 0));
 
-    widthCursor += textWidth + 20;
+    widthCursor += textWidth + 16;
   });
 
   toggleContainer.attr('transform', getTransformString(
